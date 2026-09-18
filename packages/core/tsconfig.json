@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Deliberately no "DOM" lib and no ambient types: code here must not touch
+    // the browser, Node or Tauri. The compiler enforces the package boundary.
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src"]
+}

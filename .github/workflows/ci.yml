@@ -1,0 +1,248 @@
+# Builds and tests every target on every push, so a platform breaking shows up
+# the same day (brief §8). What each job produces and how to install it is in
+# docs/ci.md.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  NDK_VERSION: "29.0.14206865"
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, JS licences
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm format:check
+      - run: pnpm check:deps
+
+  rust-licences:
+    name: Rust licences, bans, sources
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check licenses bans sources
+
+  rust-advisories:
+    name: Rust security advisories (informational)
+    runs-on: ubuntu-24.04
+    # Upstream Tauri dependencies carry "unmaintained" advisories we can't fix
+    # ourselves; report them without blocking the build.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories
+
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-2025
+            artifact: sheaf-windows-x64
+          - name: Linux
+            # Oldest supported Ubuntu LTS, so the AppImage/deb run on older glibc.
+            os: ubuntu-22.04
+            artifact: sheaf-linux-x64
+    runs-on: ${{ matrix.os }}
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Linux system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+            libxdo-dev libssl-dev patchelf file build-essential
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: desktop
+      - run: pnpm install --frozen-lockfile
+      # tauri::generate_context! embeds the frontend at compile time, so the
+      # frontend must be built before clippy can type-check the Rust crate.
+      - run: pnpm --filter @sheaf/app build
+      - name: Rust format and lint
+        if: runner.os == 'Linux'
+        run: |
+          cargo fmt --all --check
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: pnpm tauri build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          if-no-files-found: error
+          path: |
+            target/release/bundle/msi/*.msi
+            target/release/bundle/nsis/*.exe
+            target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
+            target/release/bundle/appimage/*.AppImage
+
+  android:
+    name: Android
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install Android NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" > /dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: android
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+        run: |
+          keystore="$RUNNER_TEMP/sheaf-dev.jks"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$keystore"
+            password="$KEYSTORE_PASSWORD"
+          else
+            # No secret (for example a fork's PR): sign with a throwaway key so
+            # the APK still installs. It won't update over a secret-signed build.
+            echo "::warning::ANDROID_DEV_KEYSTORE_BASE64 not set; signing with a throwaway key."
+            password="$(openssl rand -hex 16)"
+            keytool -genkeypair -keystore "$keystore" -storetype PKCS12 -alias sheaf-dev \
+              -keyalg RSA -keysize 3072 -validity 30 -dname "CN=Sheaf throwaway CI key" \
+              -storepass "$password" -keypass "$password"
+          fi
+          printf 'storeFile=%s\npassword=%s\nkeyAlias=sheaf-dev\n' "$keystore" "$password" \
+            > apps/sheaf/src-tauri/gen/android/keystore.properties
+      - run: pnpm tauri android build --apk --target aarch64 --target armv7 --target x86_64
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp apps/sheaf/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk \
+            out/sheaf-android-universal.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sheaf-android
+          if-no-files-found: error
+          path: out/sheaf-android-universal.apk
+
+  ios:
+    name: iOS (unsigned)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios, aarch64-apple-ios-sim
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ios
+      - run: pnpm install --frozen-lockfile
+      - name: Install XcodeGen
+        run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+      # The Xcode project is generated on each run until someone with a Mac
+      # commits gen/apple (needed once we add native iOS code). See docs/ci.md.
+      - name: Generate Xcode project
+        run: |
+          if [ ! -d apps/sheaf/src-tauri/gen/apple ]; then
+            pnpm tauri ios init --ci
+          fi
+      - name: Build device IPA (unsigned)
+        run: pnpm tauri ios build --ci --no-sign
+      - name: Build simulator app
+        run: pnpm tauri ios build --ci --target aarch64-sim
+      - name: Collect outputs
+        run: |
+          mkdir -p out
+          find apps/sheaf/src-tauri/gen/apple -name "*.ipa" -not -path "*/DerivedData/*" -print \
+            -exec cp {} out/sheaf-ios-unsigned.ipa \;
+          app="$(find apps/sheaf/src-tauri/gen/apple/build -type d -name '*.app' -path '*sim*' -print -quit)"
+          if [ -z "$app" ]; then app="$(find apps/sheaf/src-tauri/gen/apple/build -type d -name '*.app' -print -quit)"; fi
+          echo "simulator app: $app"
+          ditto -c -k --keepParent "$app" out/sheaf-ios-simulator.zip
+          ls -la out
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sheaf-ios
+          if-no-files-found: error
+          path: out/*
+
+  # Keeps one always-current pre-release ("dev-build") holding the latest main
+  # build of every target. Release assets download without a GitHub login,
+  # unlike Actions artifacts, so a phone can install straight from the page.
+  publish-dev-build:
+    name: Publish dev build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [checks, rust-licences, desktop, android, ios]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Replace the dev-build pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls -la artifacts
+          gh release delete dev-build --yes --cleanup-tag || true
+          gh release create dev-build artifacts/* \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Development build (latest main)" \
+            --notes "Automatic build of ${GITHUB_SHA::7}. Not a release: unsigned installers and a development-signed APK. Install steps: docs/ci.md."

@@ -1,0 +1,22 @@
+[package]
+name = "sheaf"
+version = "0.0.1"
+description = "Sheaf: long-form writing, structured."
+authors = ["Sheaf contributors"]
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+# `_lib` suffix avoids a Windows name clash between the lib and bin targets.
+# Mobile builds link the staticlib/cdylib; desktop links the rlib.
+name = "sheaf_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }

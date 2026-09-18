@@ -1,0 +1,15 @@
+# Cargo workspace. Today it holds only the Tauri shell; native crates that
+# later phases add (language detection, grammar, project indexing) join here.
+[workspace]
+resolver = "3"
+members = ["apps/sheaf/src-tauri"]
+
+[workspace.package]
+edition = "2024"
+license = "Apache-2.0"
+rust-version = "1.88"
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+strip = true

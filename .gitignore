@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+target/
+coverage/
+.vite/
+*.tsbuildinfo
+*.log
+
+# Tauri regenerates these on every build
+apps/*/src-tauri/gen/schemas/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Signing material and secrets: never commit, in any form.
+*.jks
+*.keystore
+keystore.properties
+*.p12
+*.p8
+*.mobileprovision
+*.pfx
+.env
+.env.*

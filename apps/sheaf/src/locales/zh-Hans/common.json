@@ -1,0 +1,21 @@
+{
+  "app": {
+    "tagline": "长篇写作，结构清晰。"
+  },
+  "phase0": {
+    "notice": "基础构建版本。在这里输入的内容暂时不会保存。",
+    "language": "界面语言",
+    "runtime": {
+      "detecting": "正在检测平台…",
+      "native": "运行于 {{os}}（{{arch}}），版本 {{version}}",
+      "browser": "浏览器预览：未加载原生外壳",
+      "error": "无法连接原生外壳：{{message}}"
+    },
+    "scratch": {
+      "label": "键盘测试",
+      "hint": "用任何语言输入任意内容，试试你的键盘和输入法。这段文字不会保存。",
+      "placeholder": "开始写作…"
+    }
+  },
+  "principles": "无广告。无追踪。你的文字只留在这台设备上。"
+}

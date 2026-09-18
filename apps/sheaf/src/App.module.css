@@ -1,0 +1,93 @@
+.page {
+  max-width: 40rem;
+  margin-inline: auto;
+  /* Safe-area insets keep content clear of notches and home indicators. */
+  padding-block: max(var(--space-5), env(safe-area-inset-top))
+    max(var(--space-4), env(safe-area-inset-bottom));
+  padding-left: max(var(--space-3), env(safe-area-inset-left));
+  padding-right: max(var(--space-3), env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logo {
+  flex: none;
+  border-radius: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 650;
+}
+
+.tagline {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--notice-bg);
+  color: var(--notice-text);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+.select,
+.scratch {
+  font: inherit;
+  color: inherit;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.select {
+  align-self: flex-start;
+  min-height: 44px; /* Minimum touch target. */
+}
+
+.scratch {
+  resize: vertical;
+  min-height: 8rem;
+  /* 16px minimum stops iOS zooming the page when the field gets focus. */
+  font-size: max(1rem, 16px);
+  line-height: 1.7;
+}
+
+.footer {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  border-block-start: 1px solid var(--border);
+  padding-block-start: var(--space-3);
+}
+
+.footer p {
+  margin: 0 0 var(--space-1);
+}

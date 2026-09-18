@@ -1,0 +1,21 @@
+{
+  "app": {
+    "tagline": "Long-form writing, structured."
+  },
+  "phase0": {
+    "notice": "Foundations build. Nothing you type here is saved yet.",
+    "language": "Interface language",
+    "runtime": {
+      "detecting": "Checking platform…",
+      "native": "Running on {{os}} ({{arch}}), version {{version}}",
+      "browser": "Browser preview: the native shell isn't loaded",
+      "error": "Couldn't reach the native shell: {{message}}"
+    },
+    "scratch": {
+      "label": "Keyboard check",
+      "hint": "Type anything, in any language, to try your keyboard and input method. This text is not saved.",
+      "placeholder": "Start writing…"
+    }
+  },
+  "principles": "No ads. No tracking. Your words stay on this device."
+}
