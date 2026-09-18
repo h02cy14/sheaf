@@ -39,6 +39,7 @@
     "active": true,
     "targets": "all",
     "category": "Productivity",
+    "publisher": "Sheaf contributors",
     "copyright": "© 2026 Sheaf contributors. Licensed under Apache-2.0.",
     "license": "Apache-2.0",
     "shortDescription": "Long-form writing, structured.",
