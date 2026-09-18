@@ -32,9 +32,11 @@ _Last updated: 2026-09-18, end of Phase 0 working session 1._
 - **CI green on all four targets** (first run, 2026-09-18): checks, Rust licences, Windows (NSIS + MSI), Linux (AppImage + deb + rpm), Android (17.6 MB universal APK, signed with the dev key from repo secrets), iOS (unsigned IPA + simulator build). See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and [docs/ci.md](docs/ci.md).
 - **Android dev signing key** generated at `%USERPROFILE%\.sheaf-signing\` (outside the repo). Stored as repo secrets `ANDROID_DEV_KEYSTORE_BASE64` / `ANDROID_DEV_KEYSTORE_PASSWORD`.
 
-### In flight
+- **`dev-build` pre-release live** at <https://github.com/h02cy14/sheaf/releases/tag/dev-build> (second CI run; the first failed on un-flattened artifact folders). It has 8 assets, downloads work without a GitHub login, and the CI APK is `io.github.h02cy14.sheaf` (arm64/armv7/x86_64) signed with the same dev certificate as local builds.
 
-- The `dev-build` pre-release step failed on the first run: desktop artifacts arrive in per-format subfolders, and the upload wasn't flattening them. Fixed in the following commit; to be confirmed on its run.
+### Waiting on the owner
+
+- Phase 0's "done when": install the Windows setup `.exe` and the Android `.apk` from the `dev-build` release on a real PC and phone.
 
 ### Open issues and observations
 
