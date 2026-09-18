@@ -239,9 +239,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          ls -la artifacts
+          # Desktop artifacts arrive in per-format subfolders (msi/, deb/…);
+          # a release takes files only, so flatten the tree.
+          mapfile -t files < <(find artifacts -type f | sort)
+          printf '%s\n' "${files[@]}"
           gh release delete dev-build --yes --cleanup-tag || true
-          gh release create dev-build artifacts/* \
+          gh release create dev-build "${files[@]}" \
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "Development build (latest main)" \

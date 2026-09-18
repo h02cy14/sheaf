@@ -28,23 +28,23 @@ _Last updated: 2026-09-18, end of Phase 0 working session 1._
 - **Verified locally:**
   - **Windows:** `pnpm tauri build` → 1.5 MB NSIS installer, 2.2 MB MSI. The app launches, and the Rust bridge reports "Running on Windows (x86_64)" (checked over the WebView2 debug protocol).
   - **Android:** `pnpm tauri android build` → 13.4 MB APK, signed with the dev key. Installed and launched on the emulator (API 36): renders correctly, bridge reports "Running on Android (x86_64)", cold start 564 ms.
-- **CI workflow written:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) covers checks, Rust licences, Windows, Linux, Android, iOS, and a rolling `dev-build` pre-release. See [docs/ci.md](docs/ci.md).
-- **Android dev signing key** generated at `%USERPROFILE%\.sheaf-signing\` (outside the repo).
+- **Repository:** public at <https://github.com/h02cy14/sheaf>. Bundle identifier is `io.github.h02cy14.sheaf`. Commits use the owner's GitHub no-reply address.
+- **CI green on all four targets** (first run, 2026-09-18): checks, Rust licences, Windows (NSIS + MSI), Linux (AppImage + deb + rpm), Android (17.6 MB universal APK, signed with the dev key from repo secrets), iOS (unsigned IPA + simulator build). See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and [docs/ci.md](docs/ci.md).
+- **Android dev signing key** generated at `%USERPROFILE%\.sheaf-signing\` (outside the repo). Stored as repo secrets `ANDROID_DEV_KEYSTORE_BASE64` / `ANDROID_DEV_KEYSTORE_PASSWORD`.
 
-### Blocked, needs the owner
+### In flight
 
-1. **GitHub login.** Run `"C:\Program Files\GitHub CLI\gh.exe" auth login`. Until then: no repo, no push, no CI run, and **Linux and iOS builds are unverified** (neither can be built on this Windows machine).
-2. **Final bundle identifier.** Temporarily `io.github.placeholder.sheaf`; becomes `io.github.<username>.sheaf` once the GitHub username is known (then `tauri android init` is re-run and the signing block re-applied).
+- The `dev-build` pre-release step failed on the first run: desktop artifacts arrive in per-format subfolders, and the upload wasn't flattening them. Fixed in the following commit; to be confirmed on its run.
 
 ### Open issues and observations
 
 - **Android ANR seen once** on the emulator: a 5 s main-thread stall right after a snapshot boot, while `uiautomator` was switching accessibility on. A clean relaunch showed no stall (564 ms start). Watch for it on real devices.
 - **Keyboard/IME not yet verified on a phone.** On the emulator, Gboard's stylus tutorial intercepted scripted input. Real-device keyboard checks are part of ADR 0001's kill criteria at the end of Phase 1.
 - **Android `INTERNET` permission** is present (Tauri's dev server needs it). Investigate removing it from release builds, so the OS itself guarantees the app can't reach the network.
-- `rust-advisories` CI job is informational: Tauri's Linux stack (gtk-rs 0.18) carries upstream "unmaintained" advisories.
+- `rust-advisories` CI job is informational and currently reports **6 "unmaintained" advisories, 0 vulnerabilities**: `proc-macro-error` (RUSTSEC-2024-0370) and five `unic-*` crates (RUSTSEC-2025-0075/0080/0081/0098/0100), all pulled in by Tauri's build-time tooling. Nothing to act on until upstream moves.
+- **iOS signing** is not wired yet; it needs the owner's Apple secrets (listed in docs/ci.md).
 
 ### Next
 
-1. Owner logs in to GitHub → create the public repo, fix the identifier, push, get CI green on all four targets, add the Android signing secrets.
-2. Owner installs the Windows installer and the Android APK from the `dev-build` release (Phase 0 "done when").
-3. Owner review of Phase 0 → Phase 1 (project format, ADR 0002).
+1. Owner installs the Windows installer and the Android APK from the `dev-build` release (Phase 0 "done when").
+2. Owner review of Phase 0 → Phase 1 (project format, ADR 0002).
