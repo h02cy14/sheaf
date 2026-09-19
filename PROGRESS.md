@@ -21,7 +21,9 @@ _Last updated: 2026-09-19, end of Phase 1 working session._
 force-quit the app, and lose nothing." **Met on the real Windows app**: an
 automated test types 20 × 250 words through the actual editor, kills the
 process with `taskkill /F`, finds all 5,000 words on disk and no temp files,
-and the relaunched app shows all 20 documents. It now runs in CI on every push.
+and the relaunched app shows all 20 documents (`scripts/e2e-native-forcequit.mjs`).
+In CI it is informational for now: on GitHub's Windows Server runner the app
+starts but the WebView2 debug port never appears (see open items).
 
 ### Done
 
@@ -44,6 +46,7 @@ and the relaunched app shows all 20 documents. It now runs in CI on every push.
 - **Real-device checks** (ADR 0001 kill criteria): software keyboard, IME and document pickers on an actual Android phone and iPhone. The layout follows the visual viewport, so text should stay visible above the keyboard, but this is unverified on hardware.
 - **Folders on mobile:** projects live in app storage on Android/iOS (no SAF / Files picker yet). "Open project folder…" is desktop-only.
 - **Drag and drop** was verified through the code paths and keyboard/menu moves. Pointer dragging could not be exercised headlessly; please try it.
+- **Native test in CI:** on the `windows-2025` runner, WebView2 (v152) is present and the app runs, but its remote-debugging port never opens, so the step can't drive the UI. The step now prints running processes and listening ports on failure. Candidates: the runner's non-interactive session, or WebView2 needing a GPU/desktop. Until solved, the test runs locally and the core-level tests (same scenario, real disk) run in CI.
 - **Bundle size:** 1.1 MB of minified JS (React Aria, ProseMirror, markdown-it). Fine for desktop; consider code-splitting for mobile.
 - **Android `INTERNET` permission**, `rust-advisories` (6 unmaintained, 0 vulnerabilities) and **iOS signing**: unchanged from Phase 0 (see below).
 

@@ -87,8 +87,29 @@ async function connect() {
     await sleep(500);
   }
   throw new Error(
-    `could not connect to the app's WebView on port ${port}. App output:\n${appOutput.slice(-2000)}`,
+    `could not connect to the app's WebView on port ${port}. App output:\n${appOutput.slice(-2000)}\n${diagnostics()}`,
   );
+}
+
+/** What's running and listening, to tell "no WebView" from "no debug port". */
+function diagnostics() {
+  const run = (cmd, args) => {
+    try {
+      return execFileSync(cmd, args, { encoding: "utf8" });
+    } catch (error) {
+      return String(error);
+    }
+  };
+  const processes = run("tasklist", ["/FO", "CSV", "/NH"])
+    .split("\n")
+    .filter((l) => /sheaf|msedgewebview2/i.test(l))
+    .join("\n");
+  const listening = run("netstat", ["-ano", "-p", "TCP"])
+    .split("\n")
+    .filter((l) => /LISTENING/.test(l) && /127\.0\.0\.1|0\.0\.0\.0/.test(l))
+    .slice(0, 30)
+    .join("\n");
+  return `--- processes ---\n${processes || "(none)"}\n--- listening ---\n${listening}`;
 }
 
 async function until(evaluate, expression, what, timeoutMs = 15000) {
