@@ -24,19 +24,27 @@ const DOCS = 20;
 const WORDS_PER_DOC = 250;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+let appOutput = "";
+
 function launch() {
-  return spawn(exe, [], {
+  const child = spawn(exe, [], {
     env: {
       ...process.env,
       SHEAF_PROJECTS_DIR: workdir,
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`,
     },
-    stdio: "ignore",
+    stdio: ["ignore", "pipe", "pipe"],
   });
+  child.stdout.on("data", (d) => (appOutput += d));
+  child.stderr.on("data", (d) => (appOutput += d));
+  return child;
 }
 
 async function connect() {
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 120; i++) {
+    if (app.exitCode !== null) {
+      throw new Error(`the app exited early with code ${app.exitCode}. Output:\n${appOutput.slice(-2000)}`);
+    }
     try {
       const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       const page = targets.find((t) => t.type === "page");
@@ -76,7 +84,7 @@ async function connect() {
     }
     await sleep(500);
   }
-  throw new Error("could not connect to the app's WebView");
+  throw new Error(`could not connect to the app's WebView on port ${port}. App output:\n${appOutput.slice(-2000)}`);
 }
 
 async function until(evaluate, expression, what, timeoutMs = 15000) {

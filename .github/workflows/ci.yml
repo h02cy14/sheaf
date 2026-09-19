@@ -108,6 +108,19 @@ jobs:
       - run: pnpm tauri build
       # Phase 1 acceptance test on the real app: write 5,000 words across 20
       # documents, force-kill the process, check nothing was lost.
+      # The raw .exe (unlike the installer) doesn't bootstrap WebView2, and
+      # Windows Server runner images may not ship it.
+      - name: Ensure WebView2 runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          $version = (Get-ItemProperty -Path $key -ErrorAction SilentlyContinue).pv
+          if ($version) { Write-Output "WebView2 runtime $version present" } else {
+            Write-Output 'Installing WebView2 runtime'
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile "$env:RUNNER_TEMP\wv2.exe"
+            Start-Process "$env:RUNNER_TEMP\wv2.exe" -ArgumentList '/silent','/install' -Wait
+          }
       - name: Force-quit test (native app)
         if: runner.os == 'Windows'
         run: node scripts/e2e-native-forcequit.mjs target/release/sheaf.exe
