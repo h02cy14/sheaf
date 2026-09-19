@@ -2,20 +2,103 @@
   "app": {
     "tagline": "长篇写作，结构清晰。"
   },
-  "phase0": {
-    "notice": "基础构建版本。在这里输入的内容暂时不会保存。",
+  "common": {
+    "dismiss": "关闭",
+    "loading": "正在载入…"
+  },
+  "home": {
+    "startHeading": "开始",
+    "newProject": "新建项目",
+    "newProjectHint": "几秒钟就能开始写作，无需账户。",
+    "defaultTitle": "未命名项目",
+    "openFolder": "打开项目文件夹…",
+    "openFolderTitle": "选择一个 Sheaf 项目文件夹",
+    "yourProjects": "你的项目",
+    "noProjects": "还没有项目。",
+    "browserNotice": "浏览器预览：项目只保存在这个浏览器里。",
     "language": "界面语言",
-    "runtime": {
-      "detecting": "正在检测平台…",
-      "native": "运行于 {{os}}（{{arch}}），版本 {{version}}",
-      "browser": "浏览器预览：未加载原生外壳",
-      "error": "无法连接原生外壳：{{message}}"
-    },
-    "scratch": {
-      "label": "键盘测试",
-      "hint": "用任何语言输入任意内容，试试你的键盘和输入法。这段文字不会保存。",
-      "placeholder": "开始写作…"
+    "errors": {
+      "notAProject": "这个文件夹不是 Sheaf 项目。",
+      "newerFormat": "这个项目由更新版本的 Sheaf 创建。请先更新 Sheaf 再打开。",
+      "generic": "无法打开项目：{{message}}"
     }
+  },
+  "project": {
+    "showBinder": "显示文稿夹",
+    "hideBinder": "隐藏文稿夹",
+    "showInspector": "显示检查器",
+    "hideInspector": "隐藏检查器",
+    "close": "关闭项目",
+    "noDocument": "在文稿夹中选择一个文档，或者新建一个。",
+    "attention": "需要留意",
+    "conflictBanner_other": "发现 {{count}} 个同步冲突副本。没有覆盖任何内容。",
+    "conflictsFound_other": "发现 {{count}} 个同步冲突副本，请查看顶部的提示。",
+    "keepConflict": "将“{{title}}”保留为单独的文档",
+    "treeProblems": "有些文档的上级缺失或形成了循环，已显示在“手稿”下。"
+  },
+  "save": {
+    "saved": "已保存",
+    "saving": "正在保存…",
+    "error": "保存失败，正在重试",
+    "conflict": "“{{title}}”已在别处被修改。你的版本已保存为“{{copy}}”。"
+  },
+  "session": {
+    "untitled": "未命名",
+    "newFolder": "新建文件夹",
+    "conflictCopy": "{{title}}（冲突副本）",
+    "firstDocument": "第一章"
+  },
+  "binder": {
+    "label": "文稿夹",
+    "roots": {
+      "manuscript": "手稿",
+      "research": "资料",
+      "trash": "废纸篓"
+    },
+    "newDocument": "新建文档",
+    "newFolder": "新建文件夹",
+    "newDocumentHere": "在此处新建文档",
+    "newFolderHere": "在此处新建文件夹",
+    "itemMenu": "“{{title}}”的操作",
+    "dragHandle": "移动“{{title}}”",
+    "open": "打开",
+    "rename": "重命名",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "indent": "移入上方项目",
+    "outdent": "移出文件夹",
+    "trash": "移到废纸篓",
+    "restore": "恢复",
+    "actionFailed": "操作没有完成：{{message}}"
+  },
+  "editor": {
+    "title": "文档标题",
+    "body": "文档正文",
+    "toolbar": "格式",
+    "bold": "粗体",
+    "italic": "斜体",
+    "heading1": "一级标题",
+    "heading2": "二级标题",
+    "quote": "引用",
+    "bulletList": "项目符号列表",
+    "orderedList": "编号列表",
+    "sceneBreak": "场景分隔",
+    "placeholder": "开始写作…",
+    "loadError": "无法打开这个文档：{{message}}"
+  },
+  "inspector": {
+    "label": "检查器",
+    "none": "未选择任何内容。",
+    "title": "标题",
+    "synopsis": "梗概",
+    "synopsisPlaceholder": "这里发生了什么？",
+    "kind": "类型",
+    "kinds": {
+      "text": "文档",
+      "folder": "文件夹"
+    },
+    "created": "创建时间",
+    "modified": "修改时间"
   },
   "principles": "无广告。无追踪。你的文字只留在这台设备上。"
 }

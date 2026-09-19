@@ -1,0 +1,155 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: var(--app-height, 100dvh);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 48px;
+  padding-inline: var(--space-2);
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-chrome);
+}
+
+.projectTitle {
+  flex: 1;
+  min-width: 0;
+  margin: 0 var(--space-2);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-inline-end: var(--space-2);
+}
+
+.status[data-status="error"] {
+  color: var(--danger);
+}
+
+.status[data-status="saving"] svg {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.barButton {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.barButton:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.barButton[aria-expanded="true"] {
+  color: var(--accent);
+}
+
+.banner {
+  padding: var(--space-2) var(--space-3);
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  font-size: 0.875rem;
+  border-block-end: 1px solid var(--border);
+}
+
+.banner p {
+  margin: 0 0 var(--space-1);
+}
+
+.banner ul {
+  margin: 0;
+  padding-inline-start: var(--space-4);
+}
+
+.linkButton {
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.binderPane {
+  flex: 0 0 clamp(220px, 22vw, 300px);
+  border-inline-end: 1px solid var(--border);
+  background: var(--surface-chrome);
+  min-height: 0;
+}
+
+.editorPane {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.inspectorPane {
+  flex: 0 0 clamp(240px, 22vw, 300px);
+  border-inline-start: 1px solid var(--border);
+  background: var(--surface-chrome);
+  min-height: 0;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.3);
+  z-index: 10;
+}
+
+.drawer {
+  position: absolute;
+  inset-block: 0;
+  z-index: 11;
+  width: min(86vw, 340px);
+  background: var(--surface-chrome);
+  box-shadow: var(--shadow);
+}
+
+.drawerStart {
+  inset-inline-start: 0;
+  border-inline-end: 1px solid var(--border);
+}
+
+.drawerEnd {
+  inset-inline-end: 0;
+  border-inline-start: 1px solid var(--border);
+}

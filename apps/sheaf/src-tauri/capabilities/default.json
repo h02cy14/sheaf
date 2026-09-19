@@ -1,7 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions for the main window. Phase 0 needs only the core defaults; every plugin permission added later must be justified in its PR.",
+  "description": "Permissions for the main window. App commands (file access inside attached project folders, the index cache) are Sheaf's own; plugin permissions below are the minimum each feature needs.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-destroy",
+    "dialog:allow-open",
+    "dialog:allow-message"
+  ]
 }

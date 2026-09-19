@@ -7,7 +7,7 @@ gave up, so that later changes are deliberate rather than accidental.
 | # | Decision | Status |
 |---|---|---|
 | [0001](0001-stack.md) | Application stack: Tauri 2 on all targets, React, ProseMirror | Accepted |
-| 0002 | Project file format (Phase 1) | Planned |
+| [0002](0002-project-format.md) | Project file format: a folder of Markdown files, cache outside it | Accepted |
 
 New ADRs copy [`template.md`](template.md), take the next number, and are
 never deleted. A reversed decision gets a new ADR marked "Supersedes NNNN".

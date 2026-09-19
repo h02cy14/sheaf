@@ -18,7 +18,7 @@ Review alone isn't enough, so CI blocks violations:
 
 Permissive allowlist: MIT, MIT-0, Apache-2.0 (including LLVM-exception),
 BSD-2-Clause, BSD-3-Clause, ISC, Zlib, 0BSD, CC0-1.0, Unlicense, Unicode-3.0,
-BSL-1.0, BlueOak-1.0.0.
+BSL-1.0, BlueOak-1.0.0, Python-2.0.
 
 ## ⚑ Items for the owner's attention
 
@@ -29,22 +29,36 @@ BSL-1.0, BlueOak-1.0.0.
 | WebKitGTK, GTK 3 (Linux system libraries) | LGPL-2.1+ | The Linux WebView. Tauri links them dynamically. | `.deb`/`.rpm` depend on the distro's copies, so we distribute nothing. The **AppImage bundles them** as replaceable shared libraries, which LGPL permits; it needs a notice and a pointer to their source (to add before any public release). Unavoidable for Tauri on Linux. |
 | `Swatinem/rust-cache` (GitHub Action) | LGPL-3.0 | CI build cache only | Never shipped or linked into the app, so no effect on our licence. Replaceable with `actions/cache` if preferred. |
 
-## Direct dependencies (Phase 0)
+## Direct dependencies
 
 ### Shipped in the app
 
-| Package | Licence | Purpose |
-|---|---|---|
-| `react`, `react-dom` | MIT | UI framework (ADR 0001) |
-| `i18next`, `react-i18next` | MIT | UI localisation |
-| `@tauri-apps/api` | Apache-2.0 OR MIT | Frontend ↔ Rust bridge |
-| `tauri` (crate) | Apache-2.0 OR MIT | Application shell, all targets |
-| `serde` (crate) | MIT OR Apache-2.0 | Serialising data across the bridge |
+| Package | Licence | Purpose | Since |
+|---|---|---|---|
+| `react`, `react-dom` | MIT | UI framework (ADR 0001) | Phase 0 |
+| `i18next`, `react-i18next` | MIT | UI localisation | Phase 0 |
+| `@tauri-apps/api` | Apache-2.0 OR MIT | Frontend ↔ Rust bridge | Phase 0 |
+| `tauri` (crate) | Apache-2.0 OR MIT | Application shell, all targets | Phase 0 |
+| `serde` (crate) | MIT OR Apache-2.0 | Serialising data across the bridge | Phase 0 |
+| `prosemirror-model`, `-state`, `-view`, `-transform`, `-commands`, `-keymap`, `-history`, `-inputrules`, `-schema-list` | MIT | The editor (ADR 0001) | Phase 1 |
+| `prosemirror-markdown` | MIT | Editor document ⇄ Markdown files (ADR 0002) | Phase 1 |
+| `markdown-it` | MIT | Markdown tokenizer used by the above | Phase 1 |
+| `markdown-it-cjk-friendly` | MIT | Correct bold/italic next to Chinese/Japanese punctuation | Phase 1 |
+| `yaml` | ISC | Document frontmatter | Phase 1 |
+| `fractional-indexing` | CC0-1.0 | Binder order keys (one-file reorders) | Phase 1 |
+| `zustand` | MIT | App state | Phase 1 |
+| `react-aria-components` | Apache-2.0 | Accessible binder tree, menus, drag and drop | Phase 1 |
+| `@tauri-apps/plugin-dialog`, `tauri-plugin-dialog` (crate) | MIT OR Apache-2.0 | "Open project folder…" on desktop | Phase 1 |
+| `rusqlite` (crate, `bundled`) | MIT (SQLite itself: public domain) | Index cache (ADR 0002) | Phase 1 |
+| `serde_json` (crate) | MIT OR Apache-2.0 | SQL parameters across the bridge | Phase 1 |
 
-Transitive JS in the bundle: `@babel/runtime`, `html-parse-stringify`,
-`scheduler`, `use-sync-external-store` (all MIT). Transitive Rust: about 420
-crates, overwhelmingly `MIT OR Apache-2.0`. The only non-permissive ones are
-the MPL items above.
+Transitive JS in the bundle is MIT, Apache-2.0, ISC, BSD-2-Clause
+(`entities`), 0BSD (`tslib`) and CC0. **`argparse` (Python-2.0, the
+permissive PSF licence)** is in the production dependency tree only because
+markdown-it's command-line tool uses it. It is never imported by Sheaf and
+is not in the bundle (verified), and Python-2.0 is on the allowlist with that
+note. Transitive Rust: about 440 crates, overwhelmingly `MIT OR Apache-2.0`.
+The only non-permissive ones are the MPL items above.
 
 Android platform libraries added by the Tauri template (AndroidX, Material
 Components, Kotlin stdlib) are Apache-2.0.

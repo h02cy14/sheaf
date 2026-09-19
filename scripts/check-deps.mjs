@@ -25,6 +25,9 @@ const ALLOWED_LICENCES = new Set([
   "Unlicense",
   "BlueOak-1.0.0",
   "Zlib",
+  // PSF licence: permissive, no copyleft. Only `argparse`, used by
+  // markdown-it's command-line tool and never bundled (docs/licences.md).
+  "Python-2.0",
 ]);
 
 // Exact names, or prefixes ending in "/" for whole npm scopes.

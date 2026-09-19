@@ -9,24 +9,28 @@ on Windows, Linux, Android and iOS. One frontend, one Rust core, four targets
 
 | Path | What it is |
 |---|---|
-| `src/App.tsx` | Phase 0 placeholder screen (see below) |
-| `src/i18n/` | Localisation setup. Adding a language needs no code change; see its README |
-| `src/locales/<tag>/*.json` | Translation files, one folder per BCP 47 tag |
-| `src/platform/` | The **only** place that talks to Tauri; see its README |
+| `src/home/` | Landing screen: New project, your projects, language |
+| `src/project/` | The project screen: binder, editor, inspector (drawers on narrow screens) |
+| `src/binder/` | Binder tree (React Aria): selection, drag and drop, item menu, keyboard moves |
+| `src/editor/` | The writing surface: `EditorController` (ProseMirror view, loading, autosave), toolbar, title |
+| `src/inspector/` | Per-document metadata (title, synopsis, dates) |
+| `src/state/` | App state (Zustand) and per-device conveniences (recent projects, last document) |
+| `src/i18n/`, `src/locales/` | Localisation; adding a language needs no code change (see its README) |
+| `src/platform/` | The **only** place that talks to Tauri; also the browser-preview storage |
 | `src/styles/base.css` | Design tokens (light and dark), global accessibility defaults |
 | `src-tauri/` | Rust shell; see its README |
 | `assets/icon.svg` | Master app icon; `pnpm tauri icon assets/icon.svg --ios-color "#1f3a5f"` regenerates every platform icon |
 
-## The Phase 0 screen
+## How text gets to disk
 
-It isn't a product screen. It proves, on each target, that:
+Typing → ProseMirror transaction → `Autosaver.markDirty` → 0.5 s after the
+last keystroke (at most 2 s while typing continues) → `serializeMarkdown` →
+`ProjectSession.saveBody` → conflict check → atomic write in Rust. Switching
+documents, closing the project, closing the window and backgrounding the app
+flush immediately. No Save button.
 
-- the shell starts and **the Rust bridge answers** (the footer shows OS, CPU
-  architecture and version, straight from Rust);
-- **i18n and RTL switching** work (language picker, `lang`/`dir` on `<html>`);
-- the **software keyboard and IME** can type into a field without covering it;
-- the **content security policy** blocks all network access.
+## Running
 
-## Scripts
-
-`pnpm dev` · `pnpm build` · `pnpm typecheck` · `pnpm test` · `pnpm tauri <cmd>`
+`pnpm dev` runs the UI in a browser with projects kept in localStorage
+(development only). `pnpm tauri dev` runs the real app. In development
+builds, `window.__sheaf` exposes the store and editor bridge for debugging.

@@ -2,20 +2,105 @@
   "app": {
     "tagline": "Long-form writing, structured."
   },
-  "phase0": {
-    "notice": "Foundations build. Nothing you type here is saved yet.",
+  "common": {
+    "dismiss": "Dismiss",
+    "loading": "Loading…"
+  },
+  "home": {
+    "startHeading": "Start",
+    "newProject": "New project",
+    "newProjectHint": "Start writing in seconds. No account needed.",
+    "defaultTitle": "Untitled Project",
+    "openFolder": "Open project folder…",
+    "openFolderTitle": "Choose a Sheaf project folder",
+    "yourProjects": "Your projects",
+    "noProjects": "No projects yet.",
+    "browserNotice": "Browser preview: projects are stored in this browser only.",
     "language": "Interface language",
-    "runtime": {
-      "detecting": "Checking platform…",
-      "native": "Running on {{os}} ({{arch}}), version {{version}}",
-      "browser": "Browser preview: the native shell isn't loaded",
-      "error": "Couldn't reach the native shell: {{message}}"
-    },
-    "scratch": {
-      "label": "Keyboard check",
-      "hint": "Type anything, in any language, to try your keyboard and input method. This text is not saved.",
-      "placeholder": "Start writing…"
+    "errors": {
+      "notAProject": "That folder isn't a Sheaf project.",
+      "newerFormat": "This project was made with a newer version of Sheaf. Update Sheaf to open it.",
+      "generic": "Couldn't open the project: {{message}}"
     }
+  },
+  "project": {
+    "showBinder": "Show binder",
+    "hideBinder": "Hide binder",
+    "showInspector": "Show inspector",
+    "hideInspector": "Hide inspector",
+    "close": "Close project",
+    "noDocument": "Select a document in the binder, or create one.",
+    "attention": "Needs attention",
+    "conflictBanner_one": "Found {{count}} sync-conflict copy. Nothing was overwritten.",
+    "conflictBanner_other": "Found {{count}} sync-conflict copies. Nothing was overwritten.",
+    "conflictsFound_one": "Found {{count}} sync-conflict copy. See the note at the top.",
+    "conflictsFound_other": "Found {{count}} sync-conflict copies. See the note at the top.",
+    "keepConflict": "Keep “{{title}}” as a separate document",
+    "treeProblems": "Some documents had a missing or looping parent and are shown under Manuscript."
+  },
+  "save": {
+    "saved": "Saved",
+    "saving": "Saving…",
+    "error": "Couldn't save, retrying",
+    "conflict": "“{{title}}” was changed somewhere else. Your version was kept as “{{copy}}”."
+  },
+  "session": {
+    "untitled": "Untitled",
+    "newFolder": "New Folder",
+    "conflictCopy": "{{title}} (conflict copy)",
+    "firstDocument": "Chapter 1"
+  },
+  "binder": {
+    "label": "Binder",
+    "roots": {
+      "manuscript": "Manuscript",
+      "research": "Research",
+      "trash": "Trash"
+    },
+    "newDocument": "New document",
+    "newFolder": "New folder",
+    "newDocumentHere": "New document here",
+    "newFolderHere": "New folder here",
+    "itemMenu": "Actions for {{title}}",
+    "dragHandle": "Move {{title}}",
+    "open": "Open",
+    "rename": "Rename",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "indent": "Move into item above",
+    "outdent": "Move out of folder",
+    "trash": "Move to Trash",
+    "restore": "Restore",
+    "actionFailed": "That didn't work: {{message}}"
+  },
+  "editor": {
+    "title": "Document title",
+    "body": "Document text",
+    "toolbar": "Formatting",
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "quote": "Block quote",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "sceneBreak": "Scene break",
+    "placeholder": "Start writing…",
+    "loadError": "Couldn't open this document: {{message}}"
+  },
+  "inspector": {
+    "label": "Inspector",
+    "none": "Nothing selected.",
+    "title": "Title",
+    "synopsis": "Synopsis",
+    "synopsisPlaceholder": "What happens here?",
+    "kind": "Type",
+    "kinds": {
+      "text": "Document",
+      "folder": "Folder"
+    },
+    "created": "Created",
+    "modified": "Modified"
   },
   "principles": "No ads. No tracking. Your words stay on this device."
 }

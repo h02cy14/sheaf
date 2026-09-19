@@ -11,12 +11,26 @@
 :root {
   --surface: #faf8f4;
   --surface-raised: #ffffff;
+  --surface-chrome: #f3f0ea;
   --text: #1b1f24;
   --text-muted: #555d69;
-  --border: #d9d4ca;
+  --text-faint: #8a919c;
+  --border: #ddd8ce;
+  --border-strong: #c4bdb0;
   --accent: #2f5b8f;
+  --accent-strong: #2f5b8f;
+  --on-accent: #ffffff;
+  --hover: rgb(27 31 36 / 0.06);
+  --selected: #dfe8f3;
   --notice-bg: #eef3f9;
   --notice-text: #203e63;
+  --toast-bg: #1f2429;
+  --toast-text: #f5f3ef;
+  --warning-bg: #fff3d6;
+  --warning-text: #5c4300;
+  --danger: #a3261e;
+  --danger-bg: #fbe9e7;
+  --shadow: 0 8px 28px rgb(0 0 0 / 0.14), 0 1px 3px rgb(0 0 0 / 0.08);
 
   --radius: 10px;
   --space-1: 0.25rem;
@@ -25,11 +39,18 @@
   --space-4: 1.5rem;
   --space-5: 2.5rem;
 
+  /* Writing surface: a comfortable measure and size. */
+  --measure: 42rem;
+  --writing-size: 1.125rem;
+
   --font-ui:
     system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
   --font-ui-zh-hans:
     system-ui, -apple-system, "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei",
     "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  --font-writing:
+    "Iowan Old Style", "Charter", "Georgia", "Noto Serif", "Source Han Serif SC",
+    "Noto Serif CJK SC", "Songti SC", serif;
 
   color-scheme: light dark;
 }
@@ -38,12 +59,26 @@
   :root {
     --surface: #16181d;
     --surface-raised: #1f2229;
+    --surface-chrome: #1b1e24;
     --text: #e8e6e1;
     --text-muted: #a7adb8;
-    --border: #3a3f4a;
+    --text-faint: #767d89;
+    --border: #343944;
+    --border-strong: #4a505c;
     --accent: #8fb3e0;
+    --accent-strong: #3d6aa1;
+    --on-accent: #ffffff;
+    --hover: rgb(255 255 255 / 0.06);
+    --selected: #243449;
     --notice-bg: #1d2633;
     --notice-text: #c9dbf2;
+    --toast-bg: #e8e6e1;
+    --toast-text: #16181d;
+    --warning-bg: #3a2f10;
+    --warning-text: #f3dc9b;
+    --danger: #f2a39b;
+    --danger-bg: #3b1d1a;
+    --shadow: 0 8px 28px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
   }
 }
 
@@ -84,6 +119,13 @@ body:lang(zh-Hans) {
 :lang(zh),
 :lang(ja) {
   line-break: strict;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 :focus-visible {

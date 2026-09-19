@@ -1,93 +1,66 @@
-.page {
-  max-width: 40rem;
-  margin-inline: auto;
-  /* Safe-area insets keep content clear of notches and home indicators. */
-  padding-block: max(var(--space-5), env(safe-area-inset-top))
-    max(var(--space-4), env(safe-area-inset-bottom));
-  padding-left: max(var(--space-3), env(safe-area-inset-left));
-  padding-right: max(var(--space-3), env(safe-area-inset-right));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.header {
+.loading {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-}
-
-.logo {
-  flex: none;
-  border-radius: 12px;
-}
-
-.title {
-  margin: 0;
-  font-size: 2rem;
-  line-height: 1.15;
-  font-weight: 650;
-}
-
-.tagline {
-  margin: 0;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--app-height, 100dvh);
   color: var(--text-muted);
+}
+
+.loading svg {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.notices {
+  position: fixed;
+  z-index: 50;
+  inset-inline: 0;
+  bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: none;
+  padding-inline: var(--space-3);
 }
 
 .notice {
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  background: var(--notice-bg);
-  color: var(--notice-text);
-}
-
-.field {
+  pointer-events: auto;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
-}
-
-.label {
-  font-weight: 600;
-}
-
-.hint {
-  margin: 0;
-  color: var(--text-muted);
+  max-width: 34rem;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border-radius: 10px;
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  box-shadow: var(--shadow);
   font-size: 0.9375rem;
 }
 
-.select,
-.scratch {
-  font: inherit;
+.notice[data-tone="warning"] {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.notice span {
+  flex: 1;
+}
+
+.dismiss {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: inherit;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-2) var(--space-3);
-}
-
-.select {
-  align-self: flex-start;
-  min-height: 44px; /* Minimum touch target. */
-}
-
-.scratch {
-  resize: vertical;
-  min-height: 8rem;
-  /* 16px minimum stops iOS zooming the page when the field gets focus. */
-  font-size: max(1rem, 16px);
-  line-height: 1.7;
-}
-
-.footer {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  border-block-start: 1px solid var(--border);
-  padding-block-start: var(--space-3);
-}
-
-.footer p {
-  margin: 0 0 var(--space-1);
+  cursor: pointer;
 }
