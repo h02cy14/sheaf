@@ -37,6 +37,7 @@ jobs:
       - run: pnpm test
       - run: pnpm format:check
       - run: pnpm check:deps
+      - run: pnpm check:chars
 
   rust-licences:
     name: Rust licences, bans, sources

@@ -55,7 +55,7 @@ export default defineConfig(
   {
     // Core is platform-independent; see packages/core/README.md.
     files: ["packages/core/src/**/*.ts"],
-    ignores: ["**/*.test.ts"],
+    ignores: ["**/*.test.ts", "**/*.testutil.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -71,7 +71,13 @@ export default defineConfig(
     },
   },
   {
-    files: ["**/*.{js,mjs}", "**/vite.config.ts", "**/vitest.config.ts", "**/*.test.ts"],
+    files: [
+      "**/*.{js,mjs}",
+      "**/vite.config.ts",
+      "**/vitest.config.ts",
+      "**/*.test.ts",
+      "**/*.testutil.ts",
+    ],
     languageOptions: { globals: globals.node },
   },
 );

@@ -12,7 +12,17 @@
     "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.2.0",
+    "@types/node": "^24.13.5",
     "typescript": "~6.0.3",
     "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "fractional-indexing": "^4.0.0",
+    "markdown-it": "^14.3.2",
+    "markdown-it-cjk-friendly": "^3.0.0",
+    "prosemirror-markdown": "^1.13.7",
+    "prosemirror-model": "^1.25.11",
+    "yaml": "^2.9.1"
   }
 }
