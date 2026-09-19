@@ -43,7 +43,9 @@ function launch() {
 async function connect() {
   for (let i = 0; i < 120; i++) {
     if (app.exitCode !== null) {
-      throw new Error(`the app exited early with code ${app.exitCode}. Output:\n${appOutput.slice(-2000)}`);
+      throw new Error(
+        `the app exited early with code ${app.exitCode}. Output:\n${appOutput.slice(-2000)}`,
+      );
     }
     try {
       const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
@@ -84,7 +86,9 @@ async function connect() {
     }
     await sleep(500);
   }
-  throw new Error(`could not connect to the app's WebView on port ${port}. App output:\n${appOutput.slice(-2000)}`);
+  throw new Error(
+    `could not connect to the app's WebView on port ${port}. App output:\n${appOutput.slice(-2000)}`,
+  );
 }
 
 async function until(evaluate, expression, what, timeoutMs = 15000) {
