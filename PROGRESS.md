@@ -15,9 +15,10 @@ _Last updated: 2026-09-20, end of Phase 2 working session._
 | App name | **Sheaf** (working name; needs a trademark search before public launch) | Owner, 2026-09-18 |
 | Phase order | Owner asked to go on to Phase 1 ("improve the app … before any other things") before installing the Phase 0 builds on devices | Owner, 2026-09-18 |
 
-## Phase 2: Structure and revision
+## Phase 2: Writing management
 
-**Done when (brief §9):** "I can recover a paragraph I deleted yesterday."
+**Done when (brief §9):** "I can recover an accidentally deleted paragraph
+from yesterday."
 **Met**: a test writes a paragraph, lets the clock roll over to the next day,
 overwrites the text, and gets the lost paragraph back through the snapshot
 Sheaf kept automatically before that overwrite — and the restore itself is
@@ -26,7 +27,8 @@ undoable, because restoring keeps the current text first
 
 ### Done
 
-- **Language-aware counting.** Space-delimited scripts are counted in words
+- **Language-aware counting** (a Phase 3 item, brought forward because a
+  target number is meaningless without it). Space-delimited scripts are counted in words
   (`Intl.Segmenter`, hyphenated compounds count once), Chinese, Japanese and
   Korean in characters, and a mixed paragraph gets both. A project chooses
   which number its targets use. No letter-spacing hacks, no word segmenter to
@@ -133,5 +135,9 @@ starts but the WebView2 debug port never appears (see open items).
 1. Owner review of Phases 1 and 2: try the `dev-build` on a PC and a phone
    (Chinese input especially), and say whether the counting, targets,
    history and search behave the way you expect.
-2. Phase 3 on your go-ahead: the corkboard and outliner views, collections,
-   labels and status, and compiling a draft out of the binder.
+2. Phase 3 on your go-ahead — the language layer: IME correctness on real
+   phones, RTL, per-paragraph language detection, spelling, Harper for
+   English, optional LanguageTool against an endpoint you configure, and
+   Chinese left alone entirely. Counting already works this way. *Done when:*
+   a mixed English/Chinese document checks the English and silently leaves
+   the Chinese alone, and CJK typing on a phone is flawless.
