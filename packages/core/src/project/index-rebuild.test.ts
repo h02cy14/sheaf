@@ -146,6 +146,31 @@ describe("project.db is a rebuildable cache", () => {
     await session.close();
   });
 
+  it("throws away a cache written by an older version of Sheaf", async () => {
+    // Phase 1 caches have no counts columns and no search table. Reading one
+    // fails, and a failed read of a *cache* must never cost more than a rescan.
+    const before = await buildProject();
+    const factory = nodeSqliteFactory(dbFile);
+    const db = await factory.open();
+    await db.execute("DROP TABLE files");
+    await db.execute("DROP TABLE search");
+    await db.execute(
+      `CREATE TABLE files (
+         path TEXT PRIMARY KEY, id TEXT NOT NULL, parent TEXT NOT NULL, ord TEXT NOT NULL,
+         title TEXT NOT NULL, size INTEGER NOT NULL, mtime_ms REAL NOT NULL,
+         meta_json TEXT NOT NULL, extra_json TEXT NOT NULL, problems TEXT NOT NULL)`,
+    );
+    await db.close();
+
+    const { session, recovered } = await open();
+    expect(recovered).toBe(true);
+    expect(session.scan.reread).toBe(22);
+    expect(binder(session)).toEqual(before);
+    // The new cache is complete: searching it works straight away.
+    expect((await session.search("Synopsis 5")).length).toBe(1);
+    await session.close();
+  });
+
   it("searches real SQLite, including two-character Chinese words", async () => {
     const fs = new NodeFs(projectDir);
     await fs.mkdir("");

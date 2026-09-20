@@ -62,7 +62,12 @@ undoable, because restoring keeps the current text first
   the paragraph, restores it — and checks the snapshot files on disk,
   including the `before-restore` one. Phase 1's force-quit test still passes
   against the Phase 2 build (20/20 documents, 5,000 words, 0 temp files).
-- **Tests:** 176 core + 34 app (TypeScript) + 11 Rust, all passing, plus the
+- **Upgrading from Phase 1 costs one rescan:** the index gained columns and a
+  search table, so a cache written by the installed Phase 1 build can't be
+  read. A test replaces a cache with the Phase 1 layout and proves the
+  project opens identically and search works straight away — the cache is
+  rebuilt, never repaired.
+- **Tests:** 177 core + 34 app (TypeScript) + 11 Rust, all passing, plus the
   two native tests; lint, typecheck, Prettier, licence and
   invisible-character checks pass.
 
