@@ -170,14 +170,14 @@
   color: var(--text-muted);
   font: inherit;
   font-size: 0.8125rem;
-  opacity: 0.25;
   cursor: pointer;
-  transition: opacity 150ms ease;
 }
 
+/* Quiet, but never so faint that it fails contrast: the text keeps its
+   colour and only the background recedes (WCAG AA, brief §8). */
 .leaveFocus:hover,
 .leaveFocus:focus-visible {
-  opacity: 1;
+  background: var(--hover);
   color: var(--text);
 }
 

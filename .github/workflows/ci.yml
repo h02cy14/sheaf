@@ -129,6 +129,11 @@ jobs:
         continue-on-error: true
         timeout-minutes: 10
         run: node scripts/e2e-native-forcequit.mjs target/release/sheaf.exe
+      - name: Snapshot and restore test (native app)
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        timeout-minutes: 10
+        run: node scripts/e2e-native-history.mjs target/release/sheaf.exe
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}

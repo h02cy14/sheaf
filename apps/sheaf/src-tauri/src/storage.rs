@@ -266,6 +266,23 @@ mod tests {
     }
 
     #[test]
+    fn snapshots_land_in_a_folder_made_on_demand() {
+        // A document's first snapshot creates "snapshots/<id>/" and writes
+        // into it; listing a folder that isn't there yet is not an error.
+        let root = temp_dir();
+        let dir = root.join("snapshots").join("01J9ZK3D7Q");
+        assert!(list(&dir).unwrap().is_empty());
+        mkdir(&dir).unwrap();
+        let target = dir.join("2026-09-20T08-14-55-021Z-auto-7Q0W6Y.md");
+        write_atomic(&target, "---\nid: 01J9ZK3D7Q\n---\n\nKept.\n".as_bytes()).unwrap();
+        let entries = list(&dir).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "2026-09-20T08-14-55-021Z-auto-7Q0W6Y.md");
+        assert!(!entries[0].is_dir);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn a_crashed_write_leaves_the_old_file_intact() {
         // Simulate a crash after the temp file was written but before rename.
         let dir = temp_dir();

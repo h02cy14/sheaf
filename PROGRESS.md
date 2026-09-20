@@ -57,8 +57,14 @@ undoable, because restoring keeps the current text first
   included.
 - **No new dependencies.** Counting, diffing and search use what was already
   there (`Intl`, SQLite, ProseMirror), so the licence audit is unchanged.
-- **Tests:** 176 core + 34 app (TypeScript) + 10 Rust, all passing; lint,
-  typecheck, Prettier, licence and invisible-character checks pass.
+- **Proved on the real app:** `scripts/e2e-native-history.mjs` drives the
+  installed Windows build — writes a paragraph, keeps a snapshot, destroys
+  the paragraph, restores it — and checks the snapshot files on disk,
+  including the `before-restore` one. Phase 1's force-quit test still passes
+  against the Phase 2 build (20/20 documents, 5,000 words, 0 temp files).
+- **Tests:** 176 core + 34 app (TypeScript) + 11 Rust, all passing, plus the
+  two native tests; lint, typecheck, Prettier, licence and
+  invisible-character checks pass.
 
 ### Not done / open
 
