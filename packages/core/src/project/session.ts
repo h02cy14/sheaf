@@ -12,8 +12,22 @@
 import { newId as defaultNewId } from "../ids";
 import { keysBetween } from "../order";
 import { parseDocFile, serializeDocFile, type DocFile } from "../format/docfile";
-import { DOCS_DIR, PROJECT_FILE, docPath } from "../format/layout";
-import { newProjectFile, serializeProjectFile, type ProjectFile } from "../format/project-file";
+import {
+  DOCS_DIR,
+  PROJECT_FILE,
+  docPath,
+  parseSnapshotName,
+  snapshotDir,
+  snapshotPath,
+} from "../format/layout";
+import {
+  newProjectFile,
+  serializeProjectFile,
+  type ProjectFile,
+  type ProjectSettings,
+} from "../format/project-file";
+import { countText, type TextCounts } from "../text/count";
+import { plainTextOf } from "../text/paragraphs";
 import { isRootId, type DocKind, type DocMeta, type RootId } from "../format/types";
 import type { FileStat, ProjectFs } from "./fs";
 import type { IndexStore } from "./index-store";
@@ -30,12 +44,36 @@ export interface SessionLabels {
   untitled: string;
   newFolder: string;
   conflictCopy: (title: string) => string;
+  snapshotCopy: (title: string) => string;
 }
 
 export interface SessionOptions {
   labels: SessionLabels;
   now?: () => Date;
   newId?: () => string;
+  /** How long between automatic snapshots of the same document (default 30). */
+  autoSnapshotMinutes?: number;
+}
+
+export type SnapshotKind = "auto" | "manual" | "before-restore";
+
+export interface SnapshotInfo {
+  path: string;
+  docId: string;
+  /** ISO timestamp of when this version was kept. */
+  at: string;
+  kind: SnapshotKind;
+  /** The document's title at that time. */
+  title: string;
+  counts: TextCounts;
+  /** A name the writer gave a manual snapshot. */
+  name?: string;
+}
+
+export interface SearchResult {
+  id: string;
+  field: "title" | "synopsis" | "body";
+  snippet: string;
 }
 
 export interface SessionSnapshot {
@@ -76,6 +114,8 @@ export class ProjectSession {
   private readonly known = new Map<string, Known>();
   /** Paths found changed by someone else during a metadata write; the next body save must not overwrite. */
   private readonly changedElsewhere = new Set<string>();
+  /** Newest snapshot time per document (null = none), so saves don't list the folder every time. */
+  private readonly lastSnapshotAt = new Map<string, number | null>();
   private readonly now: () => Date;
   private readonly makeId: () => string;
 
@@ -131,6 +171,7 @@ export class ProjectSession {
           modified: stamp,
           synopsis: "",
           trashedFrom: null,
+          target: null,
         },
         extra: {},
         body: "",
@@ -203,6 +244,8 @@ export class ProjectSession {
   private async write(path: string, file: DocFile): Promise<void> {
     const text = serializeDocFile(file);
     const stat = await this.fs.writeTextAtomic(path, text);
+    const plain = plainTextOf(file.body);
+    const counts = countText(plain);
     this.known.set(path, { stat, text });
     this.state.docs.set(file.meta.id, {
       path,
@@ -210,6 +253,7 @@ export class ProjectSession {
       extra: file.extra,
       problems: [],
       stat,
+      counts,
     });
     this.index
       .apply({
@@ -221,6 +265,8 @@ export class ProjectSession {
             meta: file.meta,
             extra: file.extra,
             problems: [],
+            counts,
+            text: plain,
           },
         ],
       })
@@ -267,7 +313,14 @@ export class ProjectSession {
       );
       file.meta.id = id;
       if (stat.size !== doc.stat.size || stat.mtimeMs !== doc.stat.mtimeMs) {
-        this.state.docs.set(id, { path, meta: file.meta, extra: file.extra, problems, stat });
+        this.state.docs.set(id, {
+          path,
+          meta: file.meta,
+          extra: file.extra,
+          problems,
+          stat,
+          counts: countText(plainTextOf(file.body)),
+        });
         this.changed();
       }
       return file;
@@ -289,6 +342,7 @@ export class ProjectSession {
         };
         return this.keepBoth(id, body, disk);
       }
+      await this.snapshotBeforeOverwrite(id, body);
       await this.write(path, {
         meta: { ...doc.meta, modified: this.now().toISOString() },
         extra: doc.extra,
@@ -329,6 +383,7 @@ export class ProjectSession {
       path: doc.path,
       meta: file.meta,
       extra: file.extra,
+      counts: countText(plainTextOf(file.body)),
       problems,
       stat: disk.stat,
     });
@@ -391,6 +446,7 @@ export class ProjectSession {
           modified: stamp,
           synopsis: "",
           trashedFrom: inTrash ? "manuscript" : null,
+          target: null,
         },
         extra: {},
         body: "",
@@ -534,5 +590,201 @@ export class ProjectSession {
     this.state.conflicts = this.state.conflicts.filter((c) => c.path !== path);
     this.changed();
     return id;
+  }
+
+  // -------------------------------------------------------------- snapshots
+
+  /**
+   * Keeps the version about to be overwritten, if the newest snapshot of this
+   * document is older than `autoSnapshotMinutes` (30 by default). The first
+   * save of a writing day therefore preserves yesterday's text, which is what
+   * makes "recover the paragraph I deleted yesterday" possible.
+   */
+  private async snapshotBeforeOverwrite(id: string, newBody: string): Promise<void> {
+    const doc = this.doc(id);
+    const known = this.known.get(doc.path);
+    const currentText = known?.text ?? (await this.fs.readText(doc.path));
+    if (currentText === null) return;
+    const current = parseDocFile(currentText, id).file;
+    if (current.body.trim() === "" || current.body === newBody) return;
+
+    const lastAt = await this.latestSnapshotTime(id);
+    const now = this.now();
+    const gapMs = (this.options.autoSnapshotMinutes ?? 30) * 60_000;
+    if (lastAt !== null && now.getTime() - lastAt < gapMs) return;
+    await this.writeSnapshot(id, current, "auto", now);
+  }
+
+  private async latestSnapshotTime(id: string): Promise<number | null> {
+    const cached = this.lastSnapshotAt.get(id);
+    if (cached !== undefined) return cached;
+    const entries = await this.fs.list(snapshotDir(id));
+    let latest: number | null = null;
+    for (const entry of entries) {
+      const parsed = parseSnapshotName(entry.name);
+      if (!parsed) continue;
+      const time = Date.parse(parsed.at);
+      if (!Number.isNaN(time) && (latest === null || time > latest)) latest = time;
+    }
+    this.lastSnapshotAt.set(id, latest);
+    return latest;
+  }
+
+  private async writeSnapshot(
+    id: string,
+    file: DocFile,
+    kind: SnapshotKind,
+    at: Date,
+    name?: string,
+  ): Promise<SnapshotInfo> {
+    const path = snapshotPath(id, at, kind, this.makeId().slice(-6));
+    await this.fs.mkdir(snapshotDir(id));
+    await this.fs.writeTextAtomic(
+      path,
+      serializeDocFile({
+        meta: file.meta,
+        extra: {
+          ...file.extra,
+          snapshotOf: id,
+          snapshotAt: at.toISOString(),
+          snapshotKind: kind,
+          ...(name ? { snapshotName: name } : {}),
+        },
+        body: file.body,
+      }),
+    );
+    this.lastSnapshotAt.set(id, at.getTime());
+    const info: SnapshotInfo = {
+      path,
+      docId: id,
+      at: at.toISOString(),
+      kind,
+      title: file.meta.title,
+      counts: countText(plainTextOf(file.body)),
+      ...(name ? { name } : {}),
+    };
+    this.changed();
+    return info;
+  }
+
+  /** Snapshots what is on disk right now. */
+  async takeSnapshot(id: string, name?: string): Promise<SnapshotInfo> {
+    const doc = this.doc(id);
+    const text = (await this.fs.readText(doc.path)) ?? "";
+    return this.writeSnapshot(id, parseDocFile(text, id).file, "manual", this.now(), name);
+  }
+
+  /** Past versions of a document, newest first. */
+  async listSnapshots(id: string): Promise<SnapshotInfo[]> {
+    const entries = await this.fs.list(snapshotDir(id));
+    const out: SnapshotInfo[] = [];
+    for (const entry of entries) {
+      const parsed = parseSnapshotName(entry.name);
+      if (entry.isDir || !parsed) continue;
+      const path = `${snapshotDir(id)}/${entry.name}`;
+      const text = await this.fs.readText(path);
+      if (text === null) continue;
+      const { file } = parseDocFile(text, id);
+      const name = file.extra["snapshotName"];
+      out.push({
+        path,
+        docId: id,
+        at: typeof file.extra["snapshotAt"] === "string" ? file.extra["snapshotAt"] : parsed.at,
+        kind: (parsed.kind === "manual" || parsed.kind === "before-restore"
+          ? parsed.kind
+          : "auto") as SnapshotKind,
+        title: file.meta.title,
+        counts: countText(plainTextOf(file.body)),
+        ...(typeof name === "string" ? { name } : {}),
+      });
+    }
+    return out.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  }
+
+  async readSnapshot(path: string): Promise<DocFile> {
+    const text = await this.fs.readText(path);
+    if (text === null) throw new SessionError(`No snapshot at ${path}`, "unknown-document");
+    return parseDocFile(text, "").file;
+  }
+
+  /**
+   * Puts a past version back. The current text is snapshotted first, so a
+   * restore is itself undoable. Returns the restored body for the editor.
+   */
+  async restoreSnapshot(id: string, path: string): Promise<string> {
+    const doc = this.doc(id);
+    const snapshot = await this.readSnapshot(path);
+    const currentText = (await this.fs.readText(doc.path)) ?? "";
+    await this.writeSnapshot(id, parseDocFile(currentText, id).file, "before-restore", this.now());
+    await this.enqueue(doc.path, () =>
+      this.write(doc.path, {
+        meta: { ...this.doc(id).meta, modified: this.now().toISOString() },
+        extra: this.doc(id).extra,
+        body: snapshot.body,
+      }),
+    );
+    this.changed();
+    return snapshot.body;
+  }
+
+  /** Restores a past version as a new document next to the original. */
+  async restoreSnapshotAsDocument(id: string, path: string): Promise<string> {
+    const snapshot = await this.readSnapshot(path);
+    const doc = this.doc(id);
+    const newId = this.makeId();
+    const stamp = this.now().toISOString();
+    const [order] = keysBetween(doc.meta.order || null, this.nextSiblingOrder(id), 1);
+    await this.enqueue(docPath(newId), () =>
+      this.write(docPath(newId), {
+        meta: {
+          ...doc.meta,
+          id: newId,
+          title: this.options.labels.snapshotCopy(doc.meta.title),
+          order: order as string,
+          created: stamp,
+          modified: stamp,
+          trashedFrom: null,
+        },
+        extra: {},
+        body: snapshot.body,
+      }),
+    );
+    this.changed();
+    return newId;
+  }
+
+  // ----------------------------------------------------------------- search
+
+  /** Substring search over titles, synopses and text. */
+  async search(query: string, limit = 100): Promise<SearchResult[]> {
+    const hits = await this.index.search(query, limit);
+    const byPath = new Map([...this.state.docs.values()].map((d) => [d.path, d]));
+    const results: SearchResult[] = [];
+    for (const hit of hits) {
+      const doc = byPath.get(hit.path);
+      if (doc) results.push({ id: doc.meta.id, field: hit.field, snippet: hit.snippet });
+    }
+    return results;
+  }
+
+  // --------------------------------------------------------------- settings
+
+  /** Sets a document's own target (in the project's counting unit). */
+  async setTarget(id: string, target: number | null): Promise<void> {
+    await this.updateMeta(id, (m) => ({ ...m, target }));
+    this.changed();
+  }
+
+  /** Updates project-wide writing goals in project.json. */
+  async updateSettings(patch: Partial<ProjectSettings>): Promise<void> {
+    const project = {
+      ...this.state.project,
+      settings: { ...this.state.project.settings, ...patch },
+    };
+    await this.enqueue(PROJECT_FILE, async () => {
+      await this.fs.writeTextAtomic(PROJECT_FILE, serializeProjectFile(project));
+      this.state.project = project;
+    });
+    this.changed();
   }
 }

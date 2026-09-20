@@ -33,6 +33,7 @@ const KNOWN_KEYS = new Set([
   "modified",
   "synopsis",
   "trashedFrom",
+  "target",
 ]);
 
 const BOM = String.fromCharCode(0xfeff);
@@ -55,6 +56,7 @@ function defaults(fileId: string, body: string): DocMeta {
     modified: "",
     synopsis: "",
     trashedFrom: null,
+    target: null,
   };
 }
 
@@ -118,6 +120,8 @@ export function parseDocFile(text: string, fileId: string): ParsedDocFile {
   meta.synopsis = str(fields["synopsis"]) ?? "";
   const trashedFrom = str(fields["trashedFrom"]);
   meta.trashedFrom = trashedFrom && trashedFrom.trim() !== "" ? trashedFrom : null;
+  const target = Number(fields["target"]);
+  meta.target = Number.isInteger(target) && target > 0 ? target : null;
 
   const extra: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(fields)) {
@@ -141,6 +145,7 @@ export function serializeDocFile(file: DocFile): string {
     synopsis: meta.synopsis,
   };
   if (meta.trashedFrom !== null) fields["trashedFrom"] = meta.trashedFrom;
+  if (meta.target !== null) fields["target"] = meta.target;
   for (const [key, value] of Object.entries(extra)) {
     if (!KNOWN_KEYS.has(key)) fields[key] = value;
   }

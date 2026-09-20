@@ -29,8 +29,24 @@ My Novel.sheaf/                 ← any folder name; ".sheaf" is a convention, n
     …
 ```
 
-That is the whole format for Phase 1. Later phases add sibling folders
-(`snapshots/`, `research/`); every one of them is plain files.
+That was the whole format in Phase 1. Phase 2 added one sibling folder:
+
+```
+  snapshots/
+    01J9ZK3D7Q0W6Y8V4T2R5N1M0P/                 ← one folder per document
+      2026-09-20T08-14-55-021Z-auto-7Q0W6Y.md   ← a past version, same file format
+      2026-09-20T09-02-11-880Z-manual-3D7Q0W.md
+```
+
+Snapshots are ordinary document files, named after the moment they were
+kept, why they were kept (`auto`, `manual`, `before-restore`) and a short
+random suffix so two writes in the same millisecond cannot collide. They sit
+inside the project, so they travel with it — copy the folder and the history
+comes along — and because each one is a separate small file, a sync client
+has nothing to merge. Nothing here is ever rewritten, only added.
+
+Later phases add more sibling folders (`research/`); every one of them is
+plain files.
 
 ### `project.json`
 

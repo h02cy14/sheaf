@@ -1,0 +1,64 @@
+.diff {
+  font-family: var(--font-writing);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.diff p {
+  margin: 0 0 0.7em;
+}
+
+.equal {
+  color: var(--text-faint);
+}
+
+.deleted,
+.inserted,
+.changed {
+  color: var(--text);
+}
+
+.tag {
+  display: inline-block;
+  margin-inline-end: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: 2px;
+  background: var(--hover);
+  color: var(--text-muted);
+}
+
+.deleted .tag {
+  background: var(--diff-del-bg);
+  color: var(--diff-del-text);
+}
+
+.inserted .tag {
+  background: var(--diff-ins-bg);
+  color: var(--diff-ins-text);
+}
+
+.del,
+.deleted del {
+  background: var(--diff-del-bg);
+  color: var(--diff-del-text);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.ins,
+.inserted ins {
+  background: var(--diff-ins-bg);
+  color: var(--diff-ins-text);
+  text-decoration: none;
+}
+
+.same {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}

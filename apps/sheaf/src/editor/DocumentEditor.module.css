@@ -166,3 +166,22 @@
 .error {
   color: var(--danger);
 }
+
+/* Split view: a quiet line marks which pane the keyboard is in. */
+.editor[data-pane-active="no"] .title,
+.editor[data-pane-active="no"] .prose {
+  color: var(--text-muted);
+}
+
+.editor[data-pane-active="yes"] {
+  box-shadow: inset 0 2px 0 -1px var(--accent);
+}
+
+/* Focus mode: nothing but the words, centred on the line being written. */
+.editor[data-focus-mode="on"] .mount {
+  padding-block-end: 45vh;
+}
+
+.editor[data-focus-mode="on"] .title {
+  margin-block-start: 12vh;
+}

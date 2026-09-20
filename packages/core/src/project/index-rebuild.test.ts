@@ -24,6 +24,7 @@ const labels = {
   untitled: "Untitled",
   newFolder: "New Folder",
   conflictCopy: (t: string) => `${t} (copy)`,
+  snapshotCopy: (t: string) => `${t} (snapshot)`,
 };
 
 let dir: string;
@@ -143,6 +144,30 @@ describe("project.db is a rebuildable cache", () => {
     expect(session.scan.cacheRebuilt).toBe(true);
     expect(binder(session)).toEqual(before);
     await session.close();
+  });
+
+  it("searches real SQLite, including two-character Chinese words", async () => {
+    const fs = new NodeFs(projectDir);
+    await fs.mkdir("");
+    await ProjectSession.createProject(fs, {
+      title: "Novel",
+      roots: ROOTS,
+      firstDocumentTitle: "Opening",
+      now: new Date(),
+    });
+    const { session } = await open();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, "She waited by the lighthouse.\n\n她在灯塔旁等待。\n");
+    await session.close();
+
+    const { session: reopened } = await open();
+    expect(reopened.scan.reread).toBe(0); // served from the cache
+    expect((await reopened.search("lighthouse")).map((r) => r.id)).toEqual([id]);
+    expect((await reopened.search("灯塔")).map((r) => r.id)).toEqual([id]);
+    expect((await reopened.search("LIGHTHOUSE")).map((r) => r.id)).toEqual([id]); // case-insensitive
+    expect(await reopened.search("absent")).toEqual([]);
+    await reopened.close();
   });
 
   it("never lives inside the project folder", async () => {

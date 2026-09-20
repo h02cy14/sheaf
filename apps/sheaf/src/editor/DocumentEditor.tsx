@@ -4,7 +4,9 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "../components/Icon";
 import { onBeforeExit } from "../platform";
+import { countText, type TextCounts } from "@sheaf/core";
 import { currentSession, useAppStore } from "../state/app-store";
+import type { PaneId } from "../state/panes";
 import { registerEditor } from "./bridge";
 import { EditorController } from "./controller";
 import styles from "./DocumentEditor.module.css";
@@ -57,16 +59,22 @@ function createController(): EditorController {
   });
 }
 
+/** How long after typing stops before the status bar's numbers catch up. */
+const COUNT_DELAY_MS = 400;
+
 /**
- * The writing surface for the active document. Text is saved through the
+ * The writing surface for one pane's document. Text is saved through the
  * project session automatically (never a Save button); see EditorController.
  */
-export function DocumentEditor() {
+export function DocumentEditor({ pane = "primary" }: { pane?: PaneId }) {
   const { t, i18n } = useTranslation();
-  const activeDocId = useAppStore((s) => s.activeDocId);
+  const activeDocId = useAppStore((s) => (pane === "secondary" ? s.secondDocId : s.activeDocId));
   const meta = useAppStore((s) =>
-    s.activeDocId ? s.snapshot?.docs.get(s.activeDocId)?.meta : undefined,
+    activeDocId ? s.snapshot?.docs.get(activeDocId)?.meta : undefined,
   );
+  const focusMode = useAppStore((s) => s.focusMode);
+  const paneActive = useAppStore((s) => s.activePane === pane);
+  const split = useAppStore((s) => s.secondDocId !== null);
   const [controller] = useState(createController);
   const mountRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -78,13 +86,14 @@ export function DocumentEditor() {
 
   useEffect(() => {
     if (mountRef.current) controller.attach(mountRef.current);
-    const unregister = registerEditor({
+    const unregister = registerEditor(pane, {
       flush: () => controller.saver.flush(),
       focusTitle: () => {
         titleFocusPending.current = true;
         setFocusRequest((n) => n + 1);
       },
       focusBody: () => controller.focus(),
+      replace: (docId, body) => controller.replace(docId, body),
     });
     const stopExitHook = onBeforeExit(() => controller.saver.flush());
     return () => {
@@ -92,9 +101,32 @@ export function DocumentEditor() {
       stopExitHook();
       void controller.detach();
     };
-  }, [controller]);
+  }, [controller, pane]);
 
   useEffect(() => controller.refreshAttributes(), [controller, i18n.language]);
+  useEffect(() => controller.setTypewriter(focusMode), [controller, focusMode]);
+
+  // Counting every keystroke would walk the whole document each time; a
+  // short pause is plenty for a status bar.
+  const revision = controller.getRevision();
+  useEffect(() => {
+    const setLiveCounts = useAppStore.getState().setLiveCounts;
+    if (!activeDocId) {
+      setLiveCounts(pane, null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const text = controller.plainText();
+      if (text === null || controller.activeId !== activeDocId) return;
+      const counts: TextCounts = countText(text);
+      setLiveCounts(pane, { docId: activeDocId, counts });
+    }, COUNT_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [controller, pane, activeDocId, revision]);
+
+  useEffect(() => {
+    return () => useAppStore.getState().setLiveCounts(pane, null);
+  }, [pane]);
 
   // Focus the title only once the field for the *active* document exists.
   useLayoutEffect(() => {
@@ -126,50 +158,57 @@ export function DocumentEditor() {
   const ready = Boolean(activeDocId && meta);
 
   return (
-    <div className={styles.editor}>
+    <div
+      className={styles.editor}
+      data-focus-mode={focusMode ? "on" : undefined}
+      data-pane-active={split ? (paneActive ? "yes" : "no") : undefined}
+      onFocusCapture={() => {
+        if (!paneActive) useAppStore.getState().setActivePane(pane);
+      }}
+    >
+      {ready && meta && !focusMode && (
+        <div className={styles.toolbar} role="toolbar" aria-label={t("editor.toolbar")}>
+          {toolbarItems.map((item) => {
+            const label = t(`editor.${item.label}`);
+            const active = state && item.isActive ? item.isActive(state) : false;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={styles.tool}
+                aria-label={label}
+                aria-pressed={item.isActive ? active : undefined}
+                title={item.shortcut ? `${label} (${shortcutLabel(item.shortcut)})` : label}
+                // Keep the text selection: don't take focus on mouse down.
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => controller.run(item.run)}
+              >
+                <Icon name={TOOLBAR_ICONS[item.id] ?? "document"} />
+              </button>
+            );
+          })}
+        </div>
+      )}
       {ready && meta && (
-        <>
-          <div className={styles.toolbar} role="toolbar" aria-label={t("editor.toolbar")}>
-            {toolbarItems.map((item) => {
-              const label = t(`editor.${item.label}`);
-              const active = state && item.isActive ? item.isActive(state) : false;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={styles.tool}
-                  aria-label={label}
-                  aria-pressed={item.isActive ? active : undefined}
-                  title={item.shortcut ? `${label} (${shortcutLabel(item.shortcut)})` : label}
-                  // Keep the text selection: don't take focus on mouse down.
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => controller.run(item.run)}
-                >
-                  <Icon name={TOOLBAR_ICONS[item.id] ?? "document"} />
-                </button>
-              );
-            })}
-          </div>
-          <div className={styles.page}>
-            <input
-              key={`${activeDocId}:${meta.title}`}
-              ref={titleRef}
-              data-doc-id={activeDocId ?? ""}
-              className={styles.title}
-              defaultValue={meta.title}
-              aria-label={t("editor.title")}
-              placeholder={t("session.untitled")}
-              onBlur={(e) => commitTitle(e.currentTarget.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  commitTitle(e.currentTarget.value);
-                  controller.focus();
-                }
-              }}
-            />
-          </div>
-        </>
+        <div className={styles.page}>
+          <input
+            key={`${activeDocId}:${meta.title}`}
+            ref={titleRef}
+            data-doc-id={activeDocId ?? ""}
+            className={styles.title}
+            defaultValue={meta.title}
+            aria-label={t("editor.title")}
+            placeholder={t("session.untitled")}
+            onBlur={(e) => commitTitle(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                commitTitle(e.currentTarget.value);
+                controller.focus();
+              }
+            }}
+          />
+        </div>
       )}
       {loadError && (
         <p className={styles.error} role="alert">

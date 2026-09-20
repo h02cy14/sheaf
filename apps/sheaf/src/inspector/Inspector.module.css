@@ -55,3 +55,22 @@
 .empty {
   color: var(--text-muted);
 }
+
+.historyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-block-start: var(--space-3);
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.historyButton:hover {
+  background: var(--hover);
+}

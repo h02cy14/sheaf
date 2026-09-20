@@ -17,6 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "../components/Icon";
 import { editorBridge } from "../editor/bridge";
+import { SearchField, SearchResults } from "../search/Search";
 import { useAppStore } from "../state/app-store";
 import {
   createItem,
@@ -70,6 +71,7 @@ export function Binder({ onOpened }: { onOpened?: () => void }) {
   const selection = useAppStore((s) => s.selection);
   const setSelection = useAppStore((s) => s.setSelection);
   const openDocument = useAppStore((s) => s.openDocument);
+  const [query, setQuery] = useState("");
 
   const items = useMemo<Item[]>(() => {
     if (!snapshot) return [];
@@ -205,6 +207,7 @@ export function Binder({ onOpened }: { onOpened?: () => void }) {
   }
 
   const primary = selection[selection.length - 1] ?? null;
+  const searching = query.trim() !== "";
 
   return (
     <div className={styles.binder} onKeyDownCapture={onKeyDownCapture}>
@@ -230,79 +233,87 @@ export function Binder({ onOpened }: { onOpened?: () => void }) {
         </button>
       </div>
 
-      <Tree
-        aria-label={t("binder.label")}
-        className={styles.tree ?? ""}
-        items={items}
-        selectionMode="multiple"
-        selectionBehavior="replace"
-        selectedKeys={new Set(selection)}
-        onSelectionChange={onSelectionChange}
-        disabledKeys={ROOT_IDS}
-        disabledBehavior="selection"
-        expandedKeys={expanded}
-        onExpandedChange={setExpanded}
-        dragAndDropHooks={dragAndDropHooks}
-      >
-        {function renderItem(item: Item) {
-          return (
-            <TreeItem
-              id={item.id}
-              textValue={item.title}
-              className={styles.item ?? ""}
-              data-kind={item.kind}
-            >
-              <TreeItemContent>
-                {({ hasChildItems, isExpanded, level }) => (
-                  <div
-                    className={styles.row}
-                    style={{ paddingInlineStart: `${(level - 1) * 14 + 4}px` }}
-                  >
-                    {/* Keyboard and screen-reader drag handle (visible on focus). */}
-                    <Button
-                      slot="drag"
-                      className={styles.dragHandle ?? ""}
-                      aria-label={t("binder.dragHandle", { title: item.title })}
-                      isDisabled={item.kind === "root"}
+      <SearchField value={query} onChange={setQuery} />
+
+      {searching ? (
+        <SearchResults query={query} onOpened={() => onOpened?.()} />
+      ) : (
+        <Tree
+          aria-label={t("binder.label")}
+          className={styles.tree ?? ""}
+          items={items}
+          selectionMode="multiple"
+          selectionBehavior="replace"
+          selectedKeys={new Set(selection)}
+          onSelectionChange={onSelectionChange}
+          disabledKeys={ROOT_IDS}
+          disabledBehavior="selection"
+          expandedKeys={expanded}
+          onExpandedChange={setExpanded}
+          dragAndDropHooks={dragAndDropHooks}
+        >
+          {function renderItem(item: Item) {
+            return (
+              <TreeItem
+                id={item.id}
+                textValue={item.title}
+                className={styles.item ?? ""}
+                data-kind={item.kind}
+              >
+                <TreeItemContent>
+                  {({ hasChildItems, isExpanded, level }) => (
+                    <div
+                      className={styles.row}
+                      style={{ paddingInlineStart: `${(level - 1) * 14 + 4}px` }}
                     >
-                      <Icon name="more" size={12} />
-                    </Button>
-                    {hasChildItems ? (
+                      {/* Keyboard and screen-reader drag handle (visible on focus). */}
                       <Button
-                        slot="chevron"
-                        className={styles.chevron ?? ""}
-                        data-expanded={isExpanded}
+                        slot="drag"
+                        className={styles.dragHandle ?? ""}
+                        aria-label={t("binder.dragHandle", { title: item.title })}
+                        isDisabled={item.kind === "root"}
                       >
-                        <Icon name="chevron" size={14} />
+                        <Icon name="more" size={12} />
                       </Button>
-                    ) : (
-                      <span className={styles.chevronSpacer} />
-                    )}
-                    <span className={styles.kindIcon}>
-                      <Icon
-                        name={
-                          item.kind === "root"
-                            ? ROOT_ICONS[item.root]
-                            : item.kind === "folder"
-                              ? "folder"
-                              : "document"
-                        }
-                        size={16}
-                      />
-                    </span>
-                    <span className={styles.title}>{item.title}</span>
-                    {item.kind === "root" && item.root === "trash" && item.children.length > 0 && (
-                      <span className={styles.count}>{item.children.length}</span>
-                    )}
-                    <ItemMenu item={item} onAction={runAction} />
-                  </div>
-                )}
-              </TreeItemContent>
-              <Collection items={item.children}>{renderItem}</Collection>
-            </TreeItem>
-          );
-        }}
-      </Tree>
+                      {hasChildItems ? (
+                        <Button
+                          slot="chevron"
+                          className={styles.chevron ?? ""}
+                          data-expanded={isExpanded}
+                        >
+                          <Icon name="chevron" size={14} />
+                        </Button>
+                      ) : (
+                        <span className={styles.chevronSpacer} />
+                      )}
+                      <span className={styles.kindIcon}>
+                        <Icon
+                          name={
+                            item.kind === "root"
+                              ? ROOT_ICONS[item.root]
+                              : item.kind === "folder"
+                                ? "folder"
+                                : "document"
+                          }
+                          size={16}
+                        />
+                      </span>
+                      <span className={styles.title}>{item.title}</span>
+                      {item.kind === "root" &&
+                        item.root === "trash" &&
+                        item.children.length > 0 && (
+                          <span className={styles.count}>{item.children.length}</span>
+                        )}
+                      <ItemMenu item={item} onAction={runAction} />
+                    </div>
+                  )}
+                </TreeItemContent>
+                <Collection items={item.children}>{renderItem}</Collection>
+              </TreeItem>
+            );
+          }}
+        </Tree>
+      )}
     </div>
   );
 }

@@ -4,16 +4,19 @@
  * the editor (see editor/bridge.ts), not here.
  */
 import {
+  countsWithin,
   flatten,
   ProjectOpenError,
   ProjectSession,
   readProjectFile,
+  ZERO_COUNTS,
   type RootId,
   type SessionSnapshot,
+  type TextCounts,
 } from "@sheaf/core";
 import i18next from "i18next";
 import { create } from "zustand";
-import { editorBridge } from "../editor/bridge";
+import { editorBridge, setFocusedPane } from "../editor/bridge";
 import {
   displayName,
   getStorage,
@@ -21,6 +24,7 @@ import {
   type ProjectLocation,
   type Storage,
 } from "../platform";
+import { PANES, type PaneId } from "./panes";
 import {
   forgetProject,
   lastDocument,
@@ -39,6 +43,12 @@ interface OpenProject {
   unsubscribe: () => void;
 }
 
+/** What one pane is showing, as counted while it is being typed in. */
+export interface LiveCounts {
+  docId: string;
+  counts: TextCounts;
+}
+
 export interface Notice {
   id: number;
   text: string;
@@ -54,6 +64,14 @@ export interface AppState {
   snapshot: SessionSnapshot | null;
   selection: string[];
   activeDocId: string | null;
+  /** The second pane's document, or null when the split view is closed. */
+  secondDocId: string | null;
+  activePane: PaneId;
+  focusMode: boolean;
+  /** Unsaved counts per pane, so the status bar keeps up with typing. */
+  live: Partial<Record<PaneId, LiveCounts>>;
+  /** Manuscript counts when the project was opened, for "this session". */
+  sessionBaseline: TextCounts;
   saveStatus: SaveStatus;
   notices: Notice[];
 
@@ -64,7 +82,12 @@ export interface AppState {
   pickAndOpenProject(): Promise<void>;
   closeProject(): Promise<void>;
   setSelection(ids: string[]): void;
-  openDocument(id: string | null): Promise<void>;
+  openDocument(id: string | null, pane?: PaneId): Promise<void>;
+  setActivePane(pane: PaneId): void;
+  toggleSplit(): void;
+  toggleFocusMode(): void;
+  setFocusMode(on: boolean): void;
+  setLiveCounts(pane: PaneId, live: LiveCounts | null): void;
   setSaveStatus(status: SaveStatus): void;
   notify(text: string, tone?: Notice["tone"]): void;
   dismissNotice(id: number): void;
@@ -83,6 +106,7 @@ function sessionLabels() {
     untitled: i18next.t("session.untitled"),
     newFolder: i18next.t("session.newFolder"),
     conflictCopy: (title: string) => i18next.t("session.conflictCopy", { title }),
+    snapshotCopy: (title: string) => i18next.t("session.snapshotCopy", { title }),
   };
 }
 
@@ -106,6 +130,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
   snapshot: null,
   selection: [],
   activeDocId: null,
+  secondDocId: null,
+  activePane: "primary",
+  focusMode: false,
+  live: {},
+  sessionBaseline: ZERO_COUNTS,
   saveStatus: "saved",
   notices: [],
 
@@ -187,11 +216,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
       );
       const unsubscribe = session.subscribe(() => {
         const snapshot = session.snapshot();
-        const { activeDocId, selection } = get();
+        const { activeDocId, secondDocId, selection } = get();
         set({
           snapshot,
           // Drop references to documents that no longer exist.
           activeDocId: activeDocId && snapshot.docs.has(activeDocId) ? activeDocId : null,
+          secondDocId: secondDocId && snapshot.docs.has(secondDocId) ? secondDocId : null,
           selection: selection.filter((id) => snapshot.docs.has(id)),
         });
       });
@@ -209,8 +239,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
         snapshot,
         selection: active ? [active] : [],
         activeDocId: active,
+        secondDocId: null,
+        activePane: "primary",
+        live: {},
+        sessionBaseline: countsWithin(snapshot.tree, snapshot.docs, "manuscript"),
         saveStatus: "saved",
       });
+      setFocusedPane("primary");
 
       if (snapshot.conflicts.length > 0) {
         get().notify(
@@ -240,7 +275,18 @@ export const useAppStore = create<AppState>()((set, get) => ({
     open.unsubscribe();
     await open.session.close();
     await open.attached.detach().catch(() => undefined);
-    set({ open: null, snapshot: null, selection: [], activeDocId: null, screen: "home" });
+    set({
+      open: null,
+      snapshot: null,
+      selection: [],
+      activeDocId: null,
+      secondDocId: null,
+      activePane: "primary",
+      focusMode: false,
+      live: {},
+      screen: "home",
+    });
+    setFocusedPane("primary");
     await get().refreshProjects();
   },
 
@@ -248,12 +294,77 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set({ selection: ids });
   },
 
-  async openDocument(id) {
-    if (id === get().activeDocId) return;
+  async openDocument(id, pane) {
+    const target = pane ?? get().activePane;
+    const current = target === "secondary" ? get().secondDocId : get().activeDocId;
+    if (id === current) {
+      if (target !== get().activePane) get().setActivePane(target);
+      return;
+    }
     await editorBridge.flush();
-    set({ activeDocId: id });
+    if (target === "secondary" && get().secondDocId !== null) set({ secondDocId: id });
+    else set({ activeDocId: id });
+    if (target !== get().activePane) get().setActivePane(target);
     const project = get().snapshot?.project;
-    if (id && project) rememberDocument(project.id, id);
+    // Only the main pane's document is the one to reopen next time.
+    if (id && project && target === "primary") rememberDocument(project.id, id);
+  },
+
+  setActivePane(pane) {
+    if (pane === "secondary" && get().secondDocId === null) return;
+    setFocusedPane(pane);
+    if (get().activePane !== pane) set({ activePane: pane });
+  },
+
+  /** Opens a second pane beside the first, or closes it. */
+  toggleSplit() {
+    const { secondDocId, activeDocId, snapshot } = get();
+    if (secondDocId !== null) {
+      const live = { ...get().live };
+      delete live.secondary;
+      set({ secondDocId: null, activePane: "primary", live });
+      setFocusedPane("primary");
+      return;
+    }
+    // Start on a neighbouring document if there is one, else the same one.
+    const order = snapshot
+      ? flatten(snapshot.tree, "manuscript")
+          .filter((n) => n.meta.kind === "text")
+          .map((n) => n.id)
+      : [];
+    const at = activeDocId ? order.indexOf(activeDocId) : -1;
+    const neighbour = at >= 0 ? (order[at + 1] ?? order[at - 1]) : order[0];
+    set({ secondDocId: neighbour ?? activeDocId, activePane: "secondary" });
+    setFocusedPane("secondary");
+  },
+
+  toggleFocusMode() {
+    get().setFocusMode(!get().focusMode);
+  },
+
+  setFocusMode(on) {
+    if (get().focusMode !== on) set({ focusMode: on });
+  },
+
+  setLiveCounts(pane, live) {
+    const previous = get().live[pane];
+    if (previous === live) return;
+    if (
+      previous &&
+      live &&
+      previous.docId === live.docId &&
+      previous.counts.words === live.counts.words &&
+      previous.counts.cjk === live.counts.cjk &&
+      previous.counts.characters === live.counts.characters
+    ) {
+      return;
+    }
+    const next: Partial<Record<PaneId, LiveCounts>> = {};
+    for (const other of PANES) {
+      const value = other === pane ? live : get().live[other];
+      if (value) next[other] = value;
+    }
+    set({ live: next });
   },
 
   setSaveStatus(saveStatus) {

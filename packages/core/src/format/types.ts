@@ -24,6 +24,8 @@ export interface DocMeta {
   synopsis: string;
   /** Where a trashed item came from, so Restore can put it back. */
   trashedFrom: string | null;
+  /** This document's goal, in the project's counting unit (words or characters). */
+  target: number | null;
 }
 
 /** Problems found while reading a document file. The words are always kept. */

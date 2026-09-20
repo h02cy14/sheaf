@@ -1,0 +1,112 @@
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 var(--space-2) var(--space-1);
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.field:focus-within {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+}
+
+.input {
+  flex: 1;
+  min-inline-size: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 2px 0;
+}
+
+.input:focus {
+  outline: none;
+}
+
+/* The browser's own clear button would sit next to ours. */
+.input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.clear {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.clear:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.results {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.result:hover {
+  background: var(--hover);
+}
+
+.resultTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.where {
+  font-size: 0.6875rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.snippet {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.note {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}

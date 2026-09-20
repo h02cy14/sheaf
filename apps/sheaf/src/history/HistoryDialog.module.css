@@ -1,0 +1,138 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 16rem) 1fr;
+  gap: var(--space-3);
+  min-block-size: 16rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-block-size: 24rem;
+  overflow-y: auto;
+  padding-inline-end: 2px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: var(--hover);
+}
+
+.item[aria-pressed="true"] {
+  background: var(--selected);
+  border-color: var(--accent);
+}
+
+.when {
+  font-size: 0.875rem;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.kind {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--hover);
+}
+
+.kind[data-kind="manual"] {
+  background: var(--selected);
+  color: var(--accent);
+}
+
+.diff {
+  min-inline-size: 0;
+  max-block-size: 24rem;
+  overflow-y: auto;
+  border-inline-start: 1px solid var(--border);
+  padding-inline-start: var(--space-3);
+}
+
+.diffLegend {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.note,
+.error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--on-accent);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+@media (max-width: 719px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .list {
+    max-block-size: 11rem;
+  }
+
+  .diff {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+    border-block-start: 1px solid var(--border);
+    padding-block-start: var(--space-2);
+  }
+}

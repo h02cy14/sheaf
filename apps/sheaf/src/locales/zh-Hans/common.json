@@ -4,7 +4,8 @@
   },
   "common": {
     "dismiss": "关闭",
-    "loading": "正在载入…"
+    "loading": "正在载入…",
+    "close": "关闭"
   },
   "home": {
     "startHeading": "开始",
@@ -34,7 +35,12 @@
     "conflictBanner_other": "发现 {{count}} 个同步冲突副本。没有覆盖任何内容。",
     "conflictsFound_other": "发现 {{count}} 个同步冲突副本，请查看顶部的提示。",
     "keepConflict": "将“{{title}}”保留为单独的文档",
-    "treeProblems": "有些文档的上级缺失或形成了循环，已显示在“手稿”下。"
+    "treeProblems": "有些文档的上级缺失或形成了循环，已显示在“手稿”下。",
+    "split": "分屏编辑",
+    "closeSplit": "关闭分屏",
+    "secondPane": "第二个编辑器",
+    "focusMode": "专注模式",
+    "leaveFocusMode": "退出专注模式"
   },
   "save": {
     "saved": "已保存",
@@ -46,7 +52,8 @@
     "untitled": "未命名",
     "newFolder": "新建文件夹",
     "conflictCopy": "{{title}}（冲突副本）",
-    "firstDocument": "第一章"
+    "firstDocument": "第一章",
+    "snapshotCopy": "{{title}}（已恢复）"
   },
   "binder": {
     "label": "文稿夹",
@@ -98,7 +105,73 @@
       "folder": "文件夹"
     },
     "created": "创建时间",
-    "modified": "修改时间"
+    "modified": "修改时间",
+    "target": "目标"
+  },
+  "counts": {
+    "label": "字数统计",
+    "document": "本文档",
+    "manuscript": "手稿",
+    "session": "本次",
+    "words_other": "{{formatted}} 词",
+    "characters_other": "{{formatted}} 字",
+    "unitWords": "词",
+    "unitCharacters": "字",
+    "ofTarget": "{{current}} / {{target}}",
+    "delta": "{{formatted}} {{unit}}",
+    "perDay_other": "每天 {{formatted}} {{unit}}，还剩 {{count}} 天",
+    "overdue": "已过截止日期——还差 {{formatted}} {{unit}}"
+  },
+  "targets": {
+    "open": "目标",
+    "title": "写作目标",
+    "countUnit": "统计单位",
+    "countUnitHint": "中文、日文和韩文按字统计，其他文字按词统计。",
+    "unitWords": "词",
+    "unitCharacters": "字",
+    "manuscript": "手稿目标",
+    "manuscriptNow": "当前 {{formatted}} {{unit}}。",
+    "deadline": "完成日期",
+    "deadlineHint": "设定目标和日期后，会显示每天需要写多少。",
+    "session": "每日目标",
+    "sessionHint": "从打开这个项目时开始计算。",
+    "document": "“{{title}}”的目标",
+    "documentNow": "当前 {{formatted}} {{unit}}。",
+    "noTarget": "没有目标",
+    "saveFailed": "没能保存：{{message}}"
+  },
+  "history": {
+    "open": "历史版本",
+    "title": "“{{title}}”的历史版本",
+    "take": "保存一个版本",
+    "restore": "恢复",
+    "restoreAsCopy": "恢复为副本",
+    "empty": "还没有历史版本。在覆盖较早的文字之前，Sheaf 会自动保存一个。",
+    "pick": "选择一个版本，与当前文字对比。",
+    "comparing": "自 {{when}} 以来的改动",
+    "noChanges": "之后没有任何改动。",
+    "added": "新增",
+    "removed": "删除",
+    "changed": "修改",
+    "restored": "已恢复 {{when}} 的版本。你原来的文字已先保存为历史版本。",
+    "failed": "操作没有完成：{{message}}",
+    "kinds": {
+      "auto": "自动",
+      "manual": "手动保存",
+      "before-restore": "恢复前"
+    }
+  },
+  "search": {
+    "label": "搜索这个项目",
+    "placeholder": "搜索…",
+    "clear": "清除搜索",
+    "none": "没有找到“{{query}}”。",
+    "resultsLabel_other": "{{count}} 条结果",
+    "fields": {
+      "title": "标题",
+      "synopsis": "梗概",
+      "body": "正文"
+    }
   },
   "principles": "无广告。无追踪。你的文字只留在这台设备上。"
 }

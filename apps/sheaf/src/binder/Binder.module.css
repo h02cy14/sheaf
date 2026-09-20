@@ -37,6 +37,10 @@
   color: var(--text);
 }
 
+.tree[hidden] {
+  display: none;
+}
+
 .tree {
   flex: 1;
   min-height: 0;

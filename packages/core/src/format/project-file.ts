@@ -9,6 +9,25 @@ export const FORMAT_ID = "sheaf-project";
 /** Bump only together with a migration in `project/migrations.ts`. */
 export const CURRENT_FORMAT_VERSION = 1;
 
+/** Writing goals, kept with the project so they travel with it. */
+export interface ProjectSettings {
+  /** What target numbers count: words (default) or characters. */
+  countUnit: "words" | "characters";
+  /** Goal for the whole manuscript. */
+  manuscriptTarget: number | null;
+  /** Date to finish by, as YYYY-MM-DD. */
+  deadline: string | null;
+  /** Daily writing goal. */
+  sessionTarget: number | null;
+}
+
+export const DEFAULT_SETTINGS: ProjectSettings = {
+  countUnit: "words",
+  manuscriptTarget: null,
+  deadline: null,
+  sessionTarget: null,
+};
+
 export interface ProjectFile {
   formatVersion: number;
   id: string;
@@ -16,6 +35,7 @@ export interface ProjectFile {
   created: string;
   /** Display names of the three root containers (user-renamable). */
   roots: Record<RootId, string>;
+  settings: ProjectSettings;
   /** Keys Sheaf doesn't know, preserved on rewrite. */
   extra: Record<string, unknown>;
 }
@@ -25,7 +45,25 @@ export type ProjectFileError = "not-json" | "not-a-project" | "missing-fields";
 export type ParsedProjectFile =
   { ok: true; project: ProjectFile } | { ok: false; error: ProjectFileError };
 
-const KNOWN = new Set(["format", "formatVersion", "id", "title", "created", "roots"]);
+const KNOWN = new Set(["format", "formatVersion", "id", "title", "created", "roots", "settings"]);
+
+const positiveInt = (value: unknown): number | null => {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+function parseSettings(raw: unknown): ProjectSettings {
+  const settings = { ...DEFAULT_SETTINGS };
+  if (typeof raw !== "object" || raw === null) return settings;
+  const fields = raw as Record<string, unknown>;
+  if (fields["countUnit"] === "characters") settings.countUnit = "characters";
+  settings.manuscriptTarget = positiveInt(fields["manuscriptTarget"]);
+  settings.sessionTarget = positiveInt(fields["sessionTarget"]);
+  const deadline = fields["deadline"];
+  settings.deadline =
+    typeof deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? deadline : null;
+  return settings;
+}
 
 export function parseProjectFile(
   text: string,
@@ -75,6 +113,7 @@ export function parseProjectFile(
       title: typeof fields["title"] === "string" ? fields["title"] : "",
       created: typeof fields["created"] === "string" ? fields["created"] : "",
       roots,
+      settings: parseSettings(fields["settings"]),
       extra,
     },
   };
@@ -88,6 +127,7 @@ export function serializeProjectFile(project: ProjectFile): string {
     title: project.title,
     created: project.created,
     roots: project.roots,
+    settings: project.settings,
     ...Object.fromEntries(Object.entries(project.extra).filter(([k]) => !KNOWN.has(k))),
   };
   return `${JSON.stringify(ordered, null, 2)}\n`;
@@ -104,6 +144,7 @@ export function newProjectFile(
     title,
     created: now.toISOString(),
     roots: { ...roots },
+    settings: { ...DEFAULT_SETTINGS },
     extra: {},
   };
 }

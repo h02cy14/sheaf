@@ -15,6 +15,7 @@ function sample(overrides: Partial<DocFile["meta"]> = {}, body = "Body text.\n")
       modified: "2026-09-18T10:42:17.311Z",
       synopsis: "Mara arrives on the island.",
       trashedFrom: null,
+      target: null,
       ...overrides,
     },
     extra: {},
@@ -77,6 +78,13 @@ describe("document files", () => {
     const parsed = parseDocFile(serializeDocFile(file), ID);
     expect(parsed.file.extra).toEqual(file.extra);
     expect(Object.keys(parsed.file.extra)).toEqual(["label", "keywords", "nested"]);
+  });
+
+  it("round-trip a document target, and ignore invalid ones", () => {
+    const file = sample({ target: 2500 });
+    expect(parseDocFile(serializeDocFile(file), ID).file.meta.target).toBe(2500);
+    const bad = serializeDocFile(sample()).replace("synopsis:", "target: lots\nsynopsis:");
+    expect(parseDocFile(bad, ID).file.meta.target).toBeNull();
   });
 
   it("round-trip trashedFrom", () => {

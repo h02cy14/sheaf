@@ -21,6 +21,7 @@ export interface EditorControllerOptions {
 export class EditorController {
   private view: EditorView | null = null;
   private loadedId: string | null = null;
+  private typewriter = false;
   private loading: string | null = null;
   private focusAfterLoad = false;
   private readonly states = new Map<string, EditorState>();
@@ -56,6 +57,7 @@ export class EditorController {
       state: EditorState.create({ schema }),
       editable: () => this.loadedId !== null,
       attributes: this.options.attributes(),
+      ...this.scrollProps(),
       dispatchTransaction: (tr) => {
         view.updateState(view.state.apply(tr));
         if (tr.docChanged && this.loadedId) this.saver.markDirty(this.loadedId);
@@ -85,6 +87,31 @@ export class EditorController {
     this.view?.setProps({ attributes: this.options.attributes() });
   }
 
+  /**
+   * Typewriter scrolling: the line being written stays near the middle of
+   * the pane instead of drifting to the bottom edge. ProseMirror keeps the
+   * cursor `scrollMargin` away from the edge of the scroll container, so a
+   * margin of half the pane height centres it.
+   */
+  private scrollProps(): { scrollMargin: number; scrollThreshold: number } {
+    const height = this.view?.dom.clientHeight || window.innerHeight;
+    const margin = this.typewriter ? Math.max(0, Math.round(height * 0.4)) : 5;
+    return { scrollMargin: margin, scrollThreshold: margin };
+  }
+
+  setTypewriter(on: boolean): void {
+    if (this.typewriter === on) return;
+    this.typewriter = on;
+    this.view?.setProps(this.scrollProps());
+    if (on) this.scrollCursorIntoView();
+  }
+
+  private scrollCursorIntoView(): void {
+    const view = this.view;
+    if (!view || !this.loadedId) return;
+    view.dispatch(view.state.tr.scrollIntoView());
+  }
+
   // ------------------------------------------------------------- content
 
   get state(): EditorState | null {
@@ -93,6 +120,29 @@ export class EditorController {
 
   get activeId(): string | null {
     return this.loadedId;
+  }
+
+  /** The text of the document on screen, for counting. */
+  plainText(): string | null {
+    const state = this.state;
+    if (!state) return null;
+    return state.doc.textBetween(0, state.doc.content.size, "\n", "\n");
+  }
+
+  /**
+   * Puts different text in front of the writer for a document Sheaf itself
+   * just rewrote (a snapshot restore). The undo history starts fresh: the
+   * previous text is a snapshot, not an undo step.
+   */
+  replace(docId: string, body: string): void {
+    const state = EditorState.create({
+      doc: parseMarkdown(body),
+      plugins: this.options.plugins(),
+    });
+    this.states.set(docId, state);
+    this.saved.set(docId, body);
+    if (this.loadedId === docId) this.view?.updateState(state);
+    this.changed();
   }
 
   /** Shows `docId`. Keeps the cached state (and its undo history) if the file hasn't changed. */

@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-09-19, end of Phase 1 working session._
+_Last updated: 2026-09-20, end of Phase 2 working session._
 
 ## Owner decisions and working assumptions
 
@@ -14,6 +14,65 @@ _Last updated: 2026-09-19, end of Phase 1 working session._
 | Apple Developer account | Owner **has one**; iOS signing gets wired up from repository secrets | Owner, 2026-09-18 |
 | App name | **Sheaf** (working name; needs a trademark search before public launch) | Owner, 2026-09-18 |
 | Phase order | Owner asked to go on to Phase 1 ("improve the app … before any other things") before installing the Phase 0 builds on devices | Owner, 2026-09-18 |
+
+## Phase 2: Structure and revision
+
+**Done when (brief §9):** "I can recover a paragraph I deleted yesterday."
+**Met**: a test writes a paragraph, lets the clock roll over to the next day,
+overwrites the text, and gets the lost paragraph back through the snapshot
+Sheaf kept automatically before that overwrite — and the restore itself is
+undoable, because restoring keeps the current text first
+(`packages/core/src/project/session.test.ts`).
+
+### Done
+
+- **Language-aware counting.** Space-delimited scripts are counted in words
+  (`Intl.Segmenter`, hyphenated compounds count once), Chinese, Japanese and
+  Korean in characters, and a mixed paragraph gets both. A project chooses
+  which number its targets use. No letter-spacing hacks, no word segmenter to
+  get wrong (brief §7).
+- **Targets and pace.** Targets for the manuscript, for the session and for
+  each document, with a finish-by date that turns into "2,381 words a day —
+  21 days left". Progress shows in the status bar as it is typed: saved
+  documents come from the index, the ones being written are counted in the
+  editor. Nothing nags; a missed target only changes a line of text.
+- **Snapshots.** Before overwriting text it has not kept in the last half
+  hour, Sheaf writes the old version to `snapshots/<document id>/` as a plain
+  Markdown file; you can also keep one at any time. The history panel lists
+  them, compares any of them with the current text (paragraph diff, then word
+  or CJK-character diff inside a changed paragraph), and restores — either
+  over the document or as a copy beside it. Restoring writes a
+  `before-restore` snapshot first. Nothing is ever deleted.
+- **Full-text search.** Substring search over titles, synopses and text from
+  the binder, served by the local SQLite index with the **trigram**
+  tokenizer, so a two-character Chinese word ("灯塔") matches without a word
+  segmenter. Results show where the match was and a snippet around it.
+- **Split editor** (Ctrl/⌘+\): two documents side by side, each with its own
+  undo history and autosave; the status bar follows the pane you are typing
+  in. **Focus mode** (Ctrl/⌘+Shift+D, Escape leaves): everything but the text
+  disappears, and typewriter scrolling keeps the line you are writing near
+  the middle of the pane. **Ctrl/⌘+F** puts the cursor in the search field.
+- **All of it in English and 简体中文**, including the new dialogs; the locale
+  test keeps the two files in step, placeholders and plural categories
+  included.
+- **No new dependencies.** Counting, diffing and search use what was already
+  there (`Intl`, SQLite, ProseMirror), so the licence audit is unchanged.
+- **Tests:** 176 core + 34 app (TypeScript) + 10 Rust, all passing; lint,
+  typecheck, Prettier, licence and invisible-character checks pass.
+
+### Not done / open
+
+- **Snapshot housekeeping:** snapshots accumulate; there is no pruning policy
+  yet (a per-document cap or an age limit is a Phase 3 decision). They are
+  small Markdown files, but a long novel edited daily will collect thousands.
+- **Search is substring-only:** no whole-word, case-sensitive or regular
+  expression modes, no replace, and results are not ranked. The index stores
+  what is needed for those; the UI does not offer them yet.
+- **Diff granularity:** paragraphs are matched by similarity, so a paragraph
+  rewritten wholesale shows as a delete plus an insert rather than a rewrite.
+- **Typewriter scrolling** keeps the caret away from the edges by using
+  ProseMirror's scroll margin; on a phone keyboard it has not been tried on
+  hardware yet.
 
 ## Phase 1: The writing core
 
@@ -60,5 +119,8 @@ starts but the WebView2 debug port never appears (see open items).
 
 ## Next
 
-1. Owner review of Phase 1: try the `dev-build` on a PC and a phone (Chinese input especially).
-2. Phase 2: targets, session counts, snapshots with diff and rollback, full-text search, split editor, focus mode.
+1. Owner review of Phases 1 and 2: try the `dev-build` on a PC and a phone
+   (Chinese input especially), and say whether the counting, targets,
+   history and search behave the way you expect.
+2. Phase 3 on your go-ahead: the corkboard and outliner views, collections,
+   labels and status, and compiling a draft out of the binder.

@@ -19,6 +19,7 @@ const labels = {
   untitled: "Untitled",
   newFolder: "New Folder",
   conflictCopy: (title: string) => `${title} (conflict copy)`,
+  snapshotCopy: (title: string) => `${title} (snapshot)`,
 };
 
 let clock = Date.parse("2026-09-18T10:00:00.000Z");
@@ -46,6 +47,13 @@ async function newProject(): Promise<{ fs: MemoryFs; session: ProjectSession }> 
 
 const titles = (s: ProjectSession, root: RootId = "manuscript"): string[] =>
   flatten(s.snapshot().tree, root).map((n) => n.meta.title);
+
+/** Moves the test clock forward, e.g. to the next writing day. */
+const advance = (ms: number): void => {
+  clock += ms;
+};
+const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
 
 describe("creating and opening", () => {
   it("creates a project with one document ready to type into", async () => {
@@ -311,6 +319,161 @@ describe("damage and sync debris", () => {
     const again = await openSession(fs, index);
     expect(again.scan).toMatchObject({ files: 6, reread: 1 });
     expect(titles(again)).toContain("Changed");
+  });
+});
+
+describe("snapshots", () => {
+  const YESTERDAY = [
+    "She climbed the stairs slowly.",
+    "",
+    "The paragraph about the lighthouse keeper's dog.",
+    "",
+    "Then she reached the top.",
+  ].join("\n");
+  const TODAY = ["She climbed the stairs slowly.", "", "Then she reached the top."].join("\n");
+
+  /** The Phase 2 acceptance test: recover a paragraph deleted yesterday. */
+  it("recovers a paragraph deleted yesterday", async () => {
+    const { fs, session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+
+    // Yesterday: write the scene.
+    await session.readDocument(id);
+    await session.saveBody(id, `${YESTERDAY}\n`);
+
+    // Today: delete a paragraph and keep writing.
+    advance(DAY);
+    const today = await openSession(fs);
+    await today.readDocument(id);
+    await today.saveBody(id, `${TODAY}\n`);
+
+    const snapshots = await today.listSnapshots(id);
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0]?.kind).toBe("auto");
+
+    // The lost paragraph is in the snapshot, and can be put back.
+    const kept = await today.readSnapshot(snapshots[0]?.path as string);
+    expect(kept.body).toContain("lighthouse keeper's dog");
+    const restored = await today.restoreSnapshot(id, snapshots[0]?.path as string);
+    expect(restored).toContain("lighthouse keeper's dog");
+    expect((await today.readDocument(id)).body).toContain("lighthouse keeper's dog");
+
+    // Restoring is itself undoable: today's version was kept first.
+    const after = await today.listSnapshots(id);
+    expect(after.map((s) => s.kind)).toContain("before-restore");
+    expect((await today.readSnapshot(after[0]?.path as string)).body).not.toContain("dog");
+  });
+
+  it("doesn't snapshot on every save", async () => {
+    const { session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    for (let i = 0; i < 10; i++) {
+      advance(60_000); // a minute of writing between saves
+      await session.saveBody(id, `Draft ${i}\n`);
+    }
+    // One at the first overwrite; the rest are inside the 30-minute window.
+    expect(await session.listSnapshots(id)).toHaveLength(1);
+
+    advance(31 * 60_000);
+    await session.saveBody(id, "After a break\n");
+    expect(await session.listSnapshots(id)).toHaveLength(2);
+  });
+
+  it("takes named manual snapshots and can restore one as a new document", async () => {
+    const { session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, "First draft.\n");
+    const info = await session.takeSnapshot(id, "Before the rewrite");
+    expect(info).toMatchObject({ kind: "manual", name: "Before the rewrite" });
+    expect(info.counts.words).toBe(2);
+
+    await session.saveBody(id, "Second draft, much longer now.\n");
+    const copyId = await session.restoreSnapshotAsDocument(id, info.path);
+    expect((await session.readDocument(copyId)).body).toBe("First draft.\n");
+    expect((await session.readDocument(id)).body).toBe("Second draft, much longer now.\n");
+    expect(titles(session)).toEqual(["Chapter 1", "Chapter 1 (snapshot)"]);
+  });
+
+  it("keeps snapshots as plain files outside docs/", async () => {
+    const { fs, session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, "Words.\n");
+    await session.takeSnapshot(id);
+    const paths = [...fs.files.keys()];
+    expect(paths.some((p) => p.startsWith(`snapshots/${id}/`))).toBe(true);
+    expect(paths.filter((p) => p.startsWith("docs/"))).toHaveLength(1);
+    // A snapshot is a document file: readable in any text editor.
+    const snapshotPath = paths.find((p) => p.startsWith("snapshots/")) as string;
+    const file = parseDocFile((await fs.readText(snapshotPath)) ?? "", id).file;
+    expect(file.body).toBe("Words.\n");
+    expect(file.extra["snapshotOf"]).toBe(id);
+  });
+});
+
+describe("counts, targets and search", () => {
+  it("counts words per document, in any script", async () => {
+    const { session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, "The ferry left her on the jetty.\n\n她看见了灯塔。\n");
+    const counts = session.snapshot().docs.get(id)?.counts;
+    expect(counts).toMatchObject({ words: 7, cjk: 6 });
+  });
+
+  it("keeps counts across a reopen (from the cache)", async () => {
+    const { fs, session } = await newProject();
+    const index = new MemoryIndexStore();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, "One two three four five.\n");
+    const warm = await openSession(fs, index);
+    expect(warm.snapshot().docs.get(id)?.counts.words).toBe(5);
+    const reopened = await openSession(fs, index);
+    expect(reopened.snapshot().docs.get(id)?.counts.words).toBe(5);
+  });
+
+  it("stores a per-document target and project goals", async () => {
+    const { fs, session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.setTarget(id, 2000);
+    await session.updateSettings({
+      manuscriptTarget: 90000,
+      deadline: "2026-12-31",
+      sessionTarget: 1000,
+    });
+
+    const reopened = await openSession(fs);
+    expect(reopened.snapshot().docs.get(id)?.meta.target).toBe(2000);
+    expect(reopened.snapshot().project.settings).toMatchObject({
+      manuscriptTarget: 90000,
+      deadline: "2026-12-31",
+      sessionTarget: 1000,
+      countUnit: "words",
+    });
+  });
+
+  it("finds text, titles and two-character Chinese words", async () => {
+    const { session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, "She waited by the lighthouse.\n\n她在灯塔旁等待。\n");
+    const other = await session.createDocument({
+      kind: "text",
+      parent: "manuscript",
+      title: "Lighthouse notes",
+    });
+    await session.readDocument(other);
+    await session.saveBody(other, "Nothing to see.\n");
+
+    expect((await session.search("lighthouse")).map((r) => r.id).sort()).toEqual(
+      [id, other].sort(),
+    );
+    expect(await session.search("灯塔")).toMatchObject([{ id, field: "body" }]);
+    expect((await session.search("waited by"))[0]?.snippet).toContain("waited by the lighthouse");
+    expect(await session.search("nothing here at all")).toEqual([]);
   });
 });
 

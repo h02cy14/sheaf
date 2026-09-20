@@ -153,3 +153,35 @@
   inset-inline-end: 0;
   border-inline-start: 1px solid var(--border);
 }
+
+/* Focus mode: the writing, and a quiet way back. */
+.shell[data-focus-mode="on"] .editorPane {
+  background: var(--surface);
+}
+
+.leaveFocus {
+  position: absolute;
+  inset-block-end: max(var(--space-2), env(safe-area-inset-bottom));
+  inset-inline-end: var(--space-3);
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-chrome);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  opacity: 0.25;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.leaveFocus:hover,
+.leaveFocus:focus-visible {
+  opacity: 1;
+  color: var(--text);
+}
+
+/* The split view: two editors, each with its own document. */
+.editorPane + .editorPane {
+  border-inline-start: 1px solid var(--border);
+}

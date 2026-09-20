@@ -39,6 +39,15 @@ const PATHS = {
   check: "M4.5 10.5l3.5 3.5 7.5-8",
   warning: "M10 3.5l7 12.5H3zM10 8.5v3.5M10 14.5h.01",
   spinner: "M10 3a7 7 0 1 1-7 7",
+  search: "M9 3.5a5.5 5.5 0 1 1 0 11a5.5 5.5 0 0 1 0-11zM13 13l3.5 3.5",
+  target:
+    "M10 3.5a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13zM10 7a3 3 0 1 1 0 6a3 3 0 0 1 0-6zM10 10h.01",
+  history: "M3.5 10a6.5 6.5 0 1 0 2-4.7M3.5 4.5V9H8M10 6.5V10l2.5 1.5",
+  focus:
+    "M3.5 7V4.5a1 1 0 0 1 1-1H7M13 3.5h2.5a1 1 0 0 1 1 1V7M16.5 13v2.5a1 1 0 0 1-1 1H13M7 16.5H4.5a1 1 0 0 1-1-1V13",
+  split: "M3 3.5h14v13H3zM10 3.5v13",
+  snapshot:
+    "M4 6.5h2.5L8 4.5h4L13.5 6.5H16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zM10 8.5a3 3 0 1 1 0 6a3 3 0 0 1 0-6z",
 } as const;
 
 export type IconName = keyof typeof PATHS;

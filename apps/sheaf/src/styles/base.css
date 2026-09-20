@@ -30,6 +30,12 @@
   --warning-text: #5c4300;
   --danger: #a3261e;
   --danger-bg: #fbe9e7;
+  /* Snapshot comparisons. Never the only signal: every marked run also
+     carries a label, so colour-blind readers lose nothing. */
+  --diff-ins-bg: #dcf0de;
+  --diff-ins-text: #14532d;
+  --diff-del-bg: #fbe0dd;
+  --diff-del-text: #7f1d1d;
   --shadow: 0 8px 28px rgb(0 0 0 / 0.14), 0 1px 3px rgb(0 0 0 / 0.08);
 
   --radius: 10px;
@@ -78,6 +84,10 @@
     --warning-text: #f3dc9b;
     --danger: #f2a39b;
     --danger-bg: #3b1d1a;
+    --diff-ins-bg: #1d3524;
+    --diff-ins-text: #b7e4c0;
+    --diff-del-bg: #3b1d1a;
+    --diff-del-text: #f2a39b;
     --shadow: 0 8px 28px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
   }
 }

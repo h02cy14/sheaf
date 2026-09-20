@@ -6,6 +6,8 @@
 import { parseDocFile } from "../format/docfile";
 import { DOCS_DIR, PROJECT_FILE, docPath, isDocFileName, isTempFileName } from "../format/layout";
 import { parseProjectFile, type ProjectFile } from "../format/project-file";
+import { countText, type TextCounts } from "../text/count";
+import { plainTextOf } from "../text/paragraphs";
 import type { DocMeta, DocProblem, RootId } from "../format/types";
 import type { FileStat, ProjectFs } from "./fs";
 import { INDEX_SCHEMA_VERSION, type IndexStore, type IndexedFile } from "./index-store";
@@ -19,6 +21,7 @@ export interface LoadedDoc {
   problems: DocProblem[];
   /** Size and mtime when last read or written by Sheaf. */
   stat: FileStat;
+  counts: TextCounts;
 }
 
 export interface OpenedProject {
@@ -142,6 +145,7 @@ export async function openProject(
         extra: hit.extra,
         problems: hit.problems,
         stat: { size: hit.size, mtimeMs: hit.mtimeMs },
+        counts: hit.counts,
       });
       continue;
     }
@@ -149,12 +153,15 @@ export async function openProject(
     if (text === null) continue; // vanished between list and read
     reread++;
     const { file, problems } = parseDocFile(text, fileIdFromName(entry.name));
+    const plain = plainTextOf(file.body);
+    const counts = countText(plain);
     const doc: LoadedDoc = {
       path,
       meta: file.meta,
       extra: file.extra,
       problems,
       stat: { size: entry.size, mtimeMs: entry.mtimeMs },
+      counts,
     };
     loaded.push(doc);
     upsert.push({
@@ -164,6 +171,8 @@ export async function openProject(
       meta: file.meta,
       extra: file.extra,
       problems,
+      counts,
+      text: plain,
     });
   }
 

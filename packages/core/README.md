@@ -27,13 +27,17 @@ phone. That logic lives here and nowhere else.
 | `editor/markdown.ts` | Lossless Markdown ⇄ ProseMirror, CJK-aware, verified per block with a tag fallback |
 | `format/docfile.ts` | A document file: YAML frontmatter + Markdown body; unknown keys preserved |
 | `format/project-file.ts` | `project.json` and the format version |
-| `format/layout.ts` | Where things live inside a project folder |
+| `format/layout.ts` | Where things live inside a project folder, including snapshot paths |
+| `text/count.ts` | Language-aware counting: words for space-delimited scripts, characters for CJK |
+| `text/paragraphs.ts` | Markdown → paragraphs and plain text, for counting and comparing |
+| `text/diff.ts` | Myers diff over paragraphs, then words, for comparing a snapshot with the text |
 | `project/fs.ts` | The `ProjectFs` interface and `MemoryFs` |
 | `project/index-store.ts` | The rebuildable SQLite index cache, and recovery from a corrupt one |
 | `project/tree.ts` | Binder tree from `parent`/`order`, with orphan and cycle repair |
 | `project/migrations.ts` | Format migration harness (backup first, bump version last) |
 | `project/open.ts` | Opening: migrate, scan, reconcile with the cache, detect sync-conflict copies |
-| `project/session.ts` | The open project: per-file write queue, conflict-safe saves, binder operations |
+| `project/session.ts` | The open project: per-file write queue, conflict-safe saves, binder operations, snapshots, search |
+| `project/targets.ts` | Progress against a target and what a deadline asks for per day |
 
 What the format looks like on disk, and why: [ADR 0002](../../docs/adr/0002-project-format.md).
 
@@ -44,4 +48,8 @@ What the format looks like on disk, and why: [ADR 0002](../../docs/adr/0002-proj
 - `project/index-rebuild.test.ts`: deletes and corrupts `project.db` on a
   real disk and proves the project reopens identically (brief §4).
 - `project/session.test.ts`: 5,000 words across 20 documents survive a
-  "force-quit", saves never overwrite outside changes, and the migration harness.
+  "force-quit", saves never overwrite outside changes, the migration harness,
+  and Phase 2's acceptance case — a paragraph deleted yesterday comes back,
+  and the restore that brings it back is itself undoable.
+- `text/count.test.ts`: the same paragraph counted in English, Chinese and
+  mixed text; `text/diff.test.ts`: paragraph moves, rewrites and CJK edits.

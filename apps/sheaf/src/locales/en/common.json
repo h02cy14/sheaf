@@ -4,7 +4,8 @@
   },
   "common": {
     "dismiss": "Dismiss",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "close": "Close"
   },
   "home": {
     "startHeading": "Start",
@@ -36,7 +37,12 @@
     "conflictsFound_one": "Found {{count}} sync-conflict copy. See the note at the top.",
     "conflictsFound_other": "Found {{count}} sync-conflict copies. See the note at the top.",
     "keepConflict": "Keep “{{title}}” as a separate document",
-    "treeProblems": "Some documents had a missing or looping parent and are shown under Manuscript."
+    "treeProblems": "Some documents had a missing or looping parent and are shown under Manuscript.",
+    "split": "Split the editor",
+    "closeSplit": "Close the split",
+    "secondPane": "Second editor",
+    "focusMode": "Focus mode",
+    "leaveFocusMode": "Leave focus mode"
   },
   "save": {
     "saved": "Saved",
@@ -48,7 +54,8 @@
     "untitled": "Untitled",
     "newFolder": "New Folder",
     "conflictCopy": "{{title}} (conflict copy)",
-    "firstDocument": "Chapter 1"
+    "firstDocument": "Chapter 1",
+    "snapshotCopy": "{{title}} (restored)"
   },
   "binder": {
     "label": "Binder",
@@ -100,7 +107,77 @@
       "folder": "Folder"
     },
     "created": "Created",
-    "modified": "Modified"
+    "modified": "Modified",
+    "target": "Target"
+  },
+  "counts": {
+    "label": "Word counts",
+    "document": "Document",
+    "manuscript": "Manuscript",
+    "session": "Session",
+    "words_one": "{{formatted}} word",
+    "words_other": "{{formatted}} words",
+    "characters_one": "{{formatted}} character",
+    "characters_other": "{{formatted}} characters",
+    "unitWords": "words",
+    "unitCharacters": "characters",
+    "ofTarget": "{{current}} / {{target}}",
+    "delta": "{{formatted}} {{unit}}",
+    "perDay_one": "{{formatted}} {{unit}} a day — {{count}} day left",
+    "perDay_other": "{{formatted}} {{unit}} a day — {{count}} days left",
+    "overdue": "Past the deadline — {{formatted}} {{unit}} to go"
+  },
+  "targets": {
+    "open": "Targets",
+    "title": "Writing targets",
+    "countUnit": "Count by",
+    "countUnitHint": "Chinese, Japanese and Korean text is counted by character; everything else by word.",
+    "unitWords": "Words",
+    "unitCharacters": "Characters",
+    "manuscript": "Manuscript target",
+    "manuscriptNow": "Now {{formatted}} {{unit}}.",
+    "deadline": "Finish by",
+    "deadlineHint": "Set a target and a date to see a daily pace.",
+    "session": "Daily target",
+    "sessionHint": "Counted from the moment you opened this project.",
+    "document": "Target for “{{title}}”",
+    "documentNow": "Now {{formatted}} {{unit}}.",
+    "noTarget": "No target",
+    "saveFailed": "Couldn't save that: {{message}}"
+  },
+  "history": {
+    "open": "History",
+    "title": "History of “{{title}}”",
+    "take": "Keep a snapshot",
+    "restore": "Restore",
+    "restoreAsCopy": "Restore as a copy",
+    "empty": "No snapshots yet. Sheaf keeps one automatically before replacing text it hasn't kept recently.",
+    "pick": "Choose a version to compare with the current text.",
+    "comparing": "Changes since {{when}}",
+    "noChanges": "Nothing has changed since then.",
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed",
+    "restored": "Restored the version from {{when}}. The text you had was kept as a snapshot first.",
+    "failed": "That didn't work: {{message}}",
+    "kinds": {
+      "auto": "Automatic",
+      "manual": "Kept by you",
+      "before-restore": "Before a restore"
+    }
+  },
+  "search": {
+    "label": "Search this project",
+    "placeholder": "Search…",
+    "clear": "Clear the search",
+    "none": "Nothing found for “{{query}}”.",
+    "resultsLabel_one": "{{count}} result",
+    "resultsLabel_other": "{{count}} results",
+    "fields": {
+      "title": "Title",
+      "synopsis": "Synopsis",
+      "body": "Text"
+    }
   },
   "principles": "No ads. No tracking. Your words stay on this device."
 }
