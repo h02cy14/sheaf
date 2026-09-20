@@ -12,6 +12,17 @@ same change as any feature that touches the network.
 - No analytics, usage statistics, crash reports, or "phoning home".
 - Your writing stays in files on your device.
 
+Two things Sheaf keeps beside your writing, also on your device only:
+
+- **Past versions.** Before replacing text it hasn't kept recently, Sheaf
+  writes the old version into a `snapshots` folder inside your project, so a
+  paragraph you delete can come back. They are ordinary text files; delete
+  the folder and you only lose the history.
+- **A search index.** Titles, synopses and the text of your documents are
+  copied into a database outside your project folder so search is fast. It is
+  a cache: delete it and Sheaf rebuilds it from your files. Nothing in it
+  leaves the device, and searching never contacts anything.
+
 This is enforced by the app's content security policy, which blocks the app's
 own pages from making network requests, and by automated checks that fail our
 build if an advertising or analytics library is ever added. See
