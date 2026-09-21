@@ -1,6 +1,6 @@
 import { parseMarkdown, schema } from "@sheaf/core";
 import { describe, expect, it } from "vitest";
-import { textBlocks } from "./blocks";
+import { splitBatch, textBlocks } from "./blocks";
 
 /** The text a block holds, and where a given offset in it lives. */
 function mapped(markdown: string) {
@@ -60,5 +60,37 @@ describe("textBlocks", () => {
     if (!block) return;
     const at = block.text.indexOf("after");
     expect(doc.textBetween(block.positionAt(at), block.positionAt(at + 5))).toBe("after");
+  });
+});
+
+describe("splitBatch", () => {
+  const JOIN = "\n\n";
+  const first = "The keeper counted the the waves.";
+  const second = "She waited until the the morning.";
+  const joined = [first, second].join(JOIN);
+
+  /** Where a phrase is in the joined text, as an engine would report it. */
+  const lintFor = (phrase: string, from = 0) => {
+    const start = joined.indexOf(phrase, from);
+    return { start, end: start + phrase.length, message: phrase };
+  };
+
+  it("gives each paragraph its own lints, with its own offsets", () => {
+    const lints = [lintFor("the the"), lintFor("the the", first.length)];
+    const [one, two] = splitBatch([first, second], lints, JOIN);
+
+    expect(one).toHaveLength(1);
+    expect(two).toHaveLength(1);
+    expect(first.slice(one?.[0]?.start ?? 0, one?.[0]?.end ?? 0)).toBe("the the");
+    expect(second.slice(two?.[0]?.start ?? 0, two?.[0]?.end ?? 0)).toBe("the the");
+  });
+
+  it("drops anything that straddles the join between paragraphs", () => {
+    const straddling = { start: first.length - 3, end: first.length + 5, message: "across" };
+    expect(splitBatch([first, second], [straddling], JOIN)).toEqual([[], []]);
+  });
+
+  it("copes with a paragraph that produced nothing", () => {
+    expect(splitBatch([first, second], [lintFor("the the")], JOIN)[1]).toEqual([]);
   });
 });

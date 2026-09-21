@@ -57,6 +57,34 @@ export function textBlocks(doc: PmNode): TextBlock[] {
   return blocks;
 }
 
+/**
+ * Splits one engine reply back into per-paragraph results.
+ *
+ * Paragraphs are sent to an engine joined by `separator`, so a lint's
+ * offsets are into the joined text. This puts each one back where it
+ * belongs, with offsets relative to its own paragraph, and drops anything
+ * that straddles the join (which would belong to neither).
+ */
+export function splitBatch<T extends { start: number; end: number }>(
+  texts: readonly string[],
+  lints: readonly T[],
+  separator: string,
+): T[][] {
+  const out: T[][] = [];
+  let offset = 0;
+  for (const text of texts) {
+    const end = offset + text.length;
+    const start = offset;
+    out.push(
+      lints
+        .filter((lint) => lint.start >= start && lint.end <= end)
+        .map((lint) => ({ ...lint, start: lint.start - start, end: lint.end - start })),
+    );
+    offset = end + separator.length;
+  }
+  return out;
+}
+
 /** A stable key for a block's content, so unchanged text isn't re-checked. */
 export function blockKey(text: string, language: string): string {
   return `${language}\u0000${text}`;

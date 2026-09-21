@@ -19,7 +19,7 @@ import {
 import type { EditorView } from "prosemirror-view";
 import { checkEnglish, type GrammarLint } from "../../platform/grammar";
 import { checkWithLanguageTool } from "../../platform/languagetool";
-import { textBlocks, type TextBlock } from "./blocks";
+import { splitBatch, textBlocks, type TextBlock } from "./blocks";
 import { setGrammar, type BlockLanguage, type Problem } from "./plugin";
 
 /** Everything outside the editor that the checker needs to decide. */
@@ -226,16 +226,14 @@ export class GrammarChecker {
         lints = null;
       }
       if (lints !== null) {
-        // Split the batch back into paragraphs.
-        let offset = 0;
-        for (const block of missing) {
-          const end = offset + block.text.length;
-          const mine = lints
-            .filter((lint) => lint.start >= offset && lint.end <= end)
-            .map((lint) => ({ ...lint, start: lint.start - offset, end: lint.end - offset }));
-          this.remember(keyOf(block.text), mine);
-          offset = end + JOIN.length;
-        }
+        const perBlock = splitBatch(
+          missing.map((block) => block.text),
+          lints,
+          JOIN,
+        );
+        missing.forEach((block, index) => {
+          this.remember(keyOf(block.text), perBlock[index] ?? []);
+        });
       }
     }
 
