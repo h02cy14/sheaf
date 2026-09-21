@@ -8,11 +8,18 @@
  */
 import { Schema, type DOMOutputSpec } from "prosemirror-model";
 
-const pDOM: DOMOutputSpec = ["p", 0];
-const blockquoteDOM: DOMOutputSpec = ["blockquote", 0];
+/**
+ * `dir="auto"` per block, not per document: a paragraph of Arabic inside an
+ * English manuscript lays itself out right to left, and an English paragraph
+ * inside an Arabic one does the opposite (brief §7). It is a rendering
+ * attribute only — nothing about it reaches the Markdown file.
+ */
+const AUTO_DIR = { dir: "auto" };
+const pDOM: DOMOutputSpec = ["p", AUTO_DIR, 0];
+const blockquoteDOM: DOMOutputSpec = ["blockquote", AUTO_DIR, 0];
 const hrDOM: DOMOutputSpec = ["hr", { class: "scene-break" }];
 const brDOM: DOMOutputSpec = ["br"];
-const liDOM: DOMOutputSpec = ["li", 0];
+const liDOM: DOMOutputSpec = ["li", AUTO_DIR, 0];
 const emDOM: DOMOutputSpec = ["em", 0];
 const strongDOM: DOMOutputSpec = ["strong", 0];
 
@@ -41,7 +48,7 @@ export const schema = new Schema({
         { tag: "h5", attrs: { level: 3 } },
         { tag: "h6", attrs: { level: 3 } },
       ],
-      toDOM: (node) => [`h${String(node.attrs["level"])}`, 0],
+      toDOM: (node) => [`h${String(node.attrs["level"])}`, AUTO_DIR, 0],
     },
 
     blockquote: {

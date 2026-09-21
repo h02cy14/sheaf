@@ -27,6 +27,7 @@ import type { MarkType, NodeType } from "prosemirror-model";
 import { liftListItem, sinkListItem, splitListItem, wrapInList } from "prosemirror-schema-list";
 import { Plugin, type Command, type EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
+import { grammarPlugin } from "./grammar/plugin";
 
 const nodes = schema.nodes;
 const marks = schema.marks;
@@ -210,5 +211,12 @@ function placeholder(text: string): Plugin {
 }
 
 export function editorPlugins(placeholderText: string): Plugin[] {
-  return [typingShortcuts, keys, keymap(baseKeymap), history(), placeholder(placeholderText)];
+  return [
+    typingShortcuts,
+    keys,
+    keymap(baseKeymap),
+    history(),
+    placeholder(placeholderText),
+    grammarPlugin(),
+  ];
 }

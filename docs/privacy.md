@@ -5,7 +5,9 @@ same change as any feature that touches the network.
 
 ## Right now (version 0.0.x)
 
-**Sheaf sends nothing, anywhere.**
+**Sheaf sends nothing, anywhere** — unless you deliberately set up a
+LanguageTool server of your own and enter its address (see below). Out of
+the box, and by default, there is nowhere for your words to go.
 
 - No account. No sign-in.
 - No ads, and no advertising code of any kind.
@@ -27,6 +29,23 @@ This is enforced by the app's content security policy, which blocks the app's
 own pages from making network requests, and by automated checks that fail our
 build if an advertising or analytics library is ever added. See
 [`licences.md`](licences.md).
+
+## Spelling and grammar checking
+
+Checking your English happens **on this device**, in the app itself. Nothing
+is uploaded, and there is no account, key or quota involved.
+
+Chinese is never checked at all. That is a decision, not a missing feature:
+no engine is good enough to be worth the false positives, so Sheaf says
+"中文 · 未启用语法检查" in the status bar and leaves your words alone.
+
+One setting can send text off the device, and only if you fill it in
+yourself: **LanguageTool server**. If you run a LanguageTool server and enter
+its address, paragraphs in languages Sheaf cannot check offline are sent to
+that address so it can check them. Sheaf only accepts a plain `http://`
+address — one on your own machine or network — so your manuscript cannot be
+sent to a company's cloud service by a typo. Leave the field empty, which is
+how it starts, and nothing is ever sent.
 
 ## Features that may send text later, and the rules for them
 

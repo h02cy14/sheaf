@@ -4,6 +4,33 @@
 export { newId, isValidId } from "./ids";
 export { keyBetween, keysBetween, compareOrder, isValidOrderKey } from "./order";
 
+export {
+  countScripts,
+  dominantScript,
+  isRtlLanguage,
+  isRtlText,
+  type ScriptName,
+} from "./lang/script";
+export {
+  UNKNOWN_LANGUAGE,
+  baseLanguage,
+  detectLanguage,
+  languageFor,
+  sameLanguage,
+  type Confidence,
+  type Detection,
+  type LanguageTag,
+} from "./lang/detect";
+export {
+  chooseChecker,
+  wouldLeaveDevice,
+  type CheckerAvailability,
+  type CheckerChoice,
+  type CheckerEngine,
+  type CheckerSettings,
+  type SuppressionReason,
+} from "./lang/policy";
+
 export { schema } from "./editor/schema";
 export { parseMarkdown, serializeMarkdown } from "./editor/markdown";
 

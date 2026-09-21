@@ -173,5 +173,48 @@
       "body": "正文"
     }
   },
+  "check": {
+    "cardLabel": "检查结果",
+    "deleteIt": "删除",
+    "ignore": "忽略",
+    "addToDictionary": "添加“{{word}}”"
+  },
+  "language": {
+    "title": "语言与检查",
+    "openSettings": "语言与检查",
+    "projectLanguage": "项目语言",
+    "projectLanguageHint": "用于太短、无法判断的段落。其余段落由 Sheaf 逐段判断。",
+    "detect": "自动判断",
+    "documentLanguage": "“{{title}}”的语言",
+    "documentLanguageHint": "当某个文档与项目其余部分语言不同时设置。",
+    "followProject": "跟随项目",
+    "checking": "拼写与语法",
+    "checkingOn": "检查我的英文",
+    "checkingHint": "英文在本机离线检查。中文从不检查：没有值得信赖的引擎，与其误报，不如保持安静。",
+    "dialect": "英文",
+    "dialectHint": "以哪种拼写为准。",
+    "dialects": {
+      "american": "美式",
+      "british": "英式",
+      "canadian": "加拿大式",
+      "australian": "澳大利亚式"
+    },
+    "languageTool": "LanguageTool 服务器",
+    "languageToolHint": "可选，默认留空。只有当你自己运行 LanguageTool 服务器时才填写；填写后，Sheaf 无法离线检查的语言段落会发送到该地址。仅支持 http://，因此只能是你自己的机器或网络。",
+    "languageToolActive": "无法离线检查的段落会发送到 {{endpoint}}。",
+    "endpointMustBeHttp": "地址必须以 http:// 开头——Sheaf 只与你自己运行的服务器通信。",
+    "dictionary": "项目词典",
+    "dictionaryEmpty": "还没有词条。在建议卡片上点“添加”，词条会保存在这里，并随项目一起保存。",
+    "removeWord": "移除“{{word}}”",
+    "ignoredCount_other": "已忽略 {{count}} 项。",
+    "clearIgnored": "取消忽略",
+    "states": {
+      "checked": "已检查",
+      "chinese": "未启用语法检查",
+      "no-engine": "此语言暂无检查引擎",
+      "unknown-language": "语言尚不明确",
+      "turned-off": "检查已关闭"
+    }
+  },
   "principles": "无广告。无追踪。你的文字只留在这台设备上。"
 }

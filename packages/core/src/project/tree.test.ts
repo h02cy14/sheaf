@@ -14,6 +14,7 @@ function meta(id: string, parent: string, order: string, kind: DocMeta["kind"] =
     synopsis: "",
     trashedFrom: null,
     target: null,
+    language: null,
   };
 }
 

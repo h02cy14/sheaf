@@ -16,6 +16,7 @@ function sample(overrides: Partial<DocFile["meta"]> = {}, body = "Body text.\n")
       synopsis: "Mara arrives on the island.",
       trashedFrom: null,
       target: null,
+      language: null,
       ...overrides,
     },
     extra: {},

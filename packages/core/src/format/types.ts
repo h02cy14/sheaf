@@ -26,6 +26,11 @@ export interface DocMeta {
   trashedFrom: string | null;
   /** This document's goal, in the project's counting unit (words or characters). */
   target: number | null;
+  /**
+   * The language this document is written in, as a BCP 47 tag, when the
+   * writer has said so. `null` means "work it out per paragraph" (brief §7).
+   */
+  language: string | null;
 }
 
 /** Problems found while reading a document file. The words are always kept. */

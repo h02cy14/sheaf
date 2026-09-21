@@ -1,6 +1,7 @@
 import { progress } from "@sheaf/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { LanguageIndicator } from "../language/LanguageIndicator";
 import styles from "./StatusBar.module.css";
 import { useCounts } from "./useCounts";
 
@@ -32,7 +33,13 @@ function Meter({
  * Chinese, Japanese and Korean characters count as characters and
  * everything else as words, so the number means something in any script.
  */
-export function StatusBar({ onOpenTargets }: { onOpenTargets: () => void }) {
+export function StatusBar({
+  onOpenTargets,
+  onOpenLanguage,
+}: {
+  onOpenTargets: () => void;
+  onOpenLanguage: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const counts = useCounts();
   if (!counts) return null;
@@ -86,6 +93,7 @@ export function StatusBar({ onOpenTargets }: { onOpenTargets: () => void }) {
         }
         fraction={progress(Math.max(0, session), counts.sessionTarget)}
       />
+      <LanguageIndicator onOpen={onOpenLanguage} />
       {pace !== null && (
         <span className={styles.pace} data-overdue={plan.overdue ? "yes" : undefined}>
           {pace}

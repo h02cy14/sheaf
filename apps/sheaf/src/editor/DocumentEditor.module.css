@@ -77,6 +77,11 @@
   color: var(--text-faint);
 }
 
+/* Positions the suggestion card against the text it is about. */
+.surface {
+  position: relative;
+}
+
 .mount {
   padding-block-end: 40vh; /* room to write at a comfortable eye height */
 }

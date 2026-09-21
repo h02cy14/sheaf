@@ -6,7 +6,9 @@
 //! the blocking thread pool so the UI never waits on the disk.
 
 mod error;
+mod grammar;
 mod index_db;
+mod languagetool;
 mod storage;
 
 use error::{CmdError, CmdResult};
@@ -372,6 +374,33 @@ async fn db_close(registry: State<'_, Registry>, db: u32) -> CmdResult<()> {
     Ok(())
 }
 
+// ---------------------------------------------------------------- grammar
+
+/// Checks a paragraph of English. The frontend decides *whether* a paragraph
+/// should be checked at all (see `@sheaf/core`'s language policy); this
+/// command only answers for text that policy has already cleared, and it
+/// never touches the network.
+#[tauri::command]
+async fn grammar_check(
+    text: String,
+    dialect: String,
+    dictionary: Vec<String>,
+) -> CmdResult<Vec<grammar::GrammarLint>> {
+    blocking(move || grammar::check(&text, &dialect, &dictionary)).await
+}
+
+/// Sends one paragraph to a LanguageTool server the writer configured. Only
+/// reached when the frontend's policy says this language has no offline
+/// engine and an endpoint exists; plain http only (see `languagetool.rs`).
+#[tauri::command]
+async fn languagetool_check(
+    endpoint: String,
+    text: String,
+    language: String,
+) -> CmdResult<Vec<grammar::GrammarLint>> {
+    blocking(move || languagetool::check(&endpoint, &text, &language)).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -397,6 +426,8 @@ pub fn run() {
             db_execute_many,
             db_query,
             db_close,
+            grammar_check,
+            languagetool_check,
         ])
         .run(tauri::generate_context!())
         .expect("Sheaf failed to start");

@@ -36,13 +36,15 @@ confidence-threshold = 0.9
 
 # MPL-2.0 is weak, file-level copyleft: using the crates unmodified places no
 # obligations on our code. Allowed only for these named crates, all pulled in
-# by Tauri. Any new MPL crate fails CI until reviewed (docs/licences.md).
+# by Tauri, plus `colored`, which arrives with Harper. Any new MPL crate fails
+# CI until reviewed (docs/licences.md).
 exceptions = [
   { crate = "cssparser", allow = ["MPL-2.0"] },
   { crate = "cssparser-macros", allow = ["MPL-2.0"] },
   { crate = "selectors", allow = ["MPL-2.0"] },
   { crate = "dtoa-short", allow = ["MPL-2.0"] },
   { crate = "option-ext", allow = ["MPL-2.0"] },
+  { crate = "colored", allow = ["MPL-2.0"] },
 ]
 
 [licenses.private]

@@ -6,6 +6,7 @@ import { Icon } from "../components/Icon";
 import { DocumentEditor } from "../editor/DocumentEditor";
 import { HistoryDialog } from "../history/HistoryDialog";
 import { Inspector } from "../inspector/Inspector";
+import { LanguageDialog } from "../language/LanguageDialog";
 import { requestSearchFocus } from "../search/Search";
 import { useAppStore } from "../state/app-store";
 import { StatusBar } from "../status/StatusBar";
@@ -50,7 +51,7 @@ export function ProjectView() {
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [binderDrawer, setBinderDrawer] = useState(false);
   const [inspectorDrawer, setInspectorDrawer] = useState(false);
-  const [dialog, setDialog] = useState<"targets" | "history" | null>(null);
+  const [dialog, setDialog] = useState<"targets" | "history" | "language" | null>(null);
 
   const binderDocked = medium && binderOpen && !focusMode;
   const inspectorDocked = wide && inspectorOpen && !focusMode;
@@ -264,7 +265,12 @@ export function ProjectView() {
         )}
       </div>
 
-      {!focusMode && <StatusBar onOpenTargets={() => setDialog("targets")} />}
+      {!focusMode && (
+        <StatusBar
+          onOpenTargets={() => setDialog("targets")}
+          onOpenLanguage={() => setDialog("language")}
+        />
+      )}
       {focusMode && (
         <button
           type="button"
@@ -276,6 +282,7 @@ export function ProjectView() {
       )}
 
       {dialog === "targets" && <TargetsDialog onClose={() => setDialog(null)} />}
+      {dialog === "language" && <LanguageDialog onClose={() => setDialog(null)} />}
       {dialog === "history" && activeDocId !== null && (
         <HistoryDialog docId={activeDocId} onClose={() => setDialog(null)} />
       )}

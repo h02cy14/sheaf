@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-09-20, end of Phase 2 working session._
+_Last updated: 2026-09-21, end of Phase 3 working session._
 
 ## Owner decisions and working assumptions
 
@@ -14,6 +14,83 @@ _Last updated: 2026-09-20, end of Phase 2 working session._
 | Apple Developer account | Owner **has one**; iOS signing gets wired up from repository secrets | Owner, 2026-09-18 |
 | App name | **Sheaf** (working name; needs a trademark search before public launch) | Owner, 2026-09-18 |
 | Phase order | Owner asked to go on to Phase 1 ("improve the app … before any other things") before installing the Phase 0 builds on devices | Owner, 2026-09-18 |
+
+## Phase 3: Language layer
+
+**Done when (brief §9):** "a mixed English/Chinese document checks the
+English and silently leaves the Chinese alone, and CJK typing on a phone is
+flawless." **Met on the desktop app**, proved by
+`scripts/e2e-native-ime.mjs`, which drives the real WebView's IME: it
+composes 你好 through `Input.imeSetComposition` (the same path a keyboard
+uses), cancels a composition part-way, and then checks that no pinyin
+survived, that the English mistake is underlined, that **nothing Chinese is
+ever marked**, that a suggestion applies in one tap, and that an Arabic
+paragraph lays itself out right to left. The phone half of the sentence is
+still unverified — see below.
+
+### Done
+
+- **Per-paragraph language detection**, ours, in `@sheaf/core`: script first
+  (Han, kana, Hangul, Arabic, Hebrew, Cyrillic, Greek, Thai, Devanagari),
+  then a stopword vote for Latin-script languages. It reports how sure it is,
+  and a short paragraph defers to the language the writer declared for the
+  document, then the project — never to a guess. Overrides at both levels.
+- **Chinese is never checked**, by rule rather than by setting: not when
+  checking is on, not when a LanguageTool endpoint exists. The same calm
+  treatment covers any language with no engine. The status bar says
+  `中文 · 未启用语法检查` (or "Chinese · no grammar checking, by design"),
+  follows the cursor from paragraph to paragraph, and never offers to turn
+  anything on.
+- **English spelling and grammar offline**, via Harper (Apache-2.0) compiled
+  into the Rust shell. It runs on a background thread, 700 ms after typing
+  stops, batched per language, with each paragraph's result cached so
+  untouched paragraphs are never re-sent. Underlines follow the text as it is
+  edited; a click opens a card with suggestions, "Ignore" and "Add to the
+  project dictionary". Both lists live in `project.json` and travel with the
+  project.
+- **LanguageTool, if you run one yourself.** Sheaf speaks to its HTTP API and
+  links none of it (it is LGPL). It is contacted only when the writer enters
+  an address, and only over plain `http://` — refusing `https://` means the
+  endpoint can only be a machine on their own network, never a cloud service.
+  Enforced in three places, and the HTTP client is built without TLS at all.
+- **Bidi**: every paragraph, heading and list item renders with `dir="auto"`,
+  so an Arabic paragraph inside an English manuscript reads right to left and
+  an English paragraph inside an Arabic one does not. Nothing about it
+  reaches the Markdown file.
+- **IME correctness**, tested rather than assumed: composition start, update
+  and cancel, candidate selection, and what lands on disk afterwards.
+- **[ADR 0003](docs/adr/0003-language-layer.md)** records why detection is
+  ours rather than `lingua-rs`, why Harper is in Rust rather than WASM (with
+  the size measured), why LanguageTool is http-only, and what each choice
+  gives up.
+- **Tests:** 196 core + 49 app (TypeScript) + 18 Rust, all passing, plus
+  three native acceptance scripts. Lint, typecheck, Prettier, the licence
+  audit and the character check all pass.
+
+### Not done / open
+
+- **⚑ For the owner:** Harper brings a small machine-learning stack (`burn`)
+  with it for its part-of-speech tagger. That is **+8 MB** in the Windows
+  binary (8.7 MB → 16.9 MB) and about a minute of build time, and it adds one
+  **MPL-2.0** crate (`colored`) to the tree — weak, file-level copyleft, used
+  unmodified, now a named exception in `deny.toml` and recorded in
+  [docs/licences.md](docs/licences.md). Worth knowing before the mobile
+  download size matters.
+- **Spelling for languages other than English.** Harper covers English.
+  Hunspell dictionaries for other languages vary in licence (some GPL) and
+  need downloading on demand, which is its own design and its own decision;
+  the routing and the indicator already handle "no engine for this language"
+  correctly.
+- **CJK typing on a phone** is still unverified on hardware — the acceptance
+  sentence's second half. The desktop WebView's IME path is now covered by an
+  automated test; an Android phone and an iPhone need a person.
+- **Detection is deliberately narrow.** A paragraph in a language outside the
+  stopword lists reads as "some Latin language we have no engine for", which
+  leads to the same outcome as a correct guess: nothing is checked, and the
+  indicator says so.
+- **Harper's own suggestions** are as good as Harper is; Sheaf shows them
+  unchanged. The one thing Sheaf guarantees is that they never appear for
+  text that should not have been checked.
 
 ## Phase 2: Writing management
 
@@ -132,12 +209,10 @@ starts but the WebView2 debug port never appears (see open items).
 
 ## Next
 
-1. Owner review of Phases 1 and 2: try the `dev-build` on a PC and a phone
-   (Chinese input especially), and say whether the counting, targets,
-   history and search behave the way you expect.
-2. Phase 3 on your go-ahead — the language layer: IME correctness on real
-   phones, RTL, per-paragraph language detection, spelling, Harper for
-   English, optional LanguageTool against an endpoint you configure, and
-   Chinese left alone entirely. Counting already works this way. *Done when:*
-   a mixed English/Chinese document checks the English and silently leaves
-   the Chinese alone, and CJK typing on a phone is flawless.
+1. Owner review of Phases 1–3: try the `dev-build` on a PC and a phone.
+   Chinese input on a real phone is the one acceptance criterion an automated
+   test cannot reach, so that is the thing to try first.
+2. Phase 4 on your go-ahead — structure views: the corkboard, the outliner,
+   metadata, labels and status, and collections. *Done when* (brief §9): I
+   can restructure a 60-scene novel by dragging cards and see the result in
+   the manuscript.

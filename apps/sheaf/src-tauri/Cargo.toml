@@ -24,3 +24,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # `bundled`: the same SQLite version, compiled in, on every target.
 rusqlite = { version = "0.40", features = ["bundled"] }
+# Offline English spelling and grammar (Apache-2.0). Bundled, never a service.
+# `concurrent`: linters must be Send, because checking runs on a worker thread.
+harper-core = { version = "2.11", default-features = false, features = ["concurrent"] }
+# Speaks to a LanguageTool server the writer runs. No TLS on purpose: the
+# endpoint can only be plain http, i.e. their own machine or network.
+ureq = { version = "3.4", default-features = false }

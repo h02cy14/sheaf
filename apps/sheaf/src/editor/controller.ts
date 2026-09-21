@@ -8,6 +8,8 @@ import { parseMarkdown, schema, serializeMarkdown, type ProjectSession } from "@
 import { EditorState, type Command, type Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { Autosaver, type AutosaveStatus } from "./autosave";
+import { GrammarChecker, type GrammarContext } from "./grammar/checker";
+import { setGrammar } from "./grammar/plugin";
 
 export interface EditorControllerOptions {
   session: () => ProjectSession;
@@ -16,6 +18,8 @@ export interface EditorControllerOptions {
   onStatus: (status: AutosaveStatus) => void;
   /** Our text was kept as `copyId` because the file changed elsewhere. */
   onConflict: (docId: string, copyId: string) => void;
+  /** Language settings for checking, or null while no project is open. */
+  grammarContext?: () => GrammarContext | null;
 }
 
 export class EditorController {
@@ -30,9 +34,14 @@ export class EditorController {
   private readonly listeners = new Set<() => void>();
   private revision = 0;
   readonly saver: Autosaver;
+  readonly checker: GrammarChecker;
 
   constructor(private readonly options: EditorControllerOptions) {
     this.saver = new Autosaver((docId) => this.save(docId), options.onStatus);
+    this.checker = new GrammarChecker({
+      view: () => this.view,
+      context: () => (this.loadedId === null ? null : (options.grammarContext?.() ?? null)),
+    });
   }
 
   // ------------------------------------------------------ React plumbing
@@ -60,7 +69,10 @@ export class EditorController {
       ...this.scrollProps(),
       dispatchTransaction: (tr) => {
         view.updateState(view.state.apply(tr));
-        if (tr.docChanged && this.loadedId) this.saver.markDirty(this.loadedId);
+        if (tr.docChanged && this.loadedId) {
+          this.saver.markDirty(this.loadedId);
+          this.checker.schedule();
+        }
         this.changed();
       },
     });
@@ -79,6 +91,7 @@ export class EditorController {
     this.view = null;
     this.loadedId = null;
     this.loading = null;
+    this.checker.stop();
     view?.destroy();
     await this.saver.flush();
   }
@@ -118,6 +131,11 @@ export class EditorController {
     return this.loadedId ? (this.view?.state ?? null) : null;
   }
 
+  /** The live view, for UI that has to position itself over the text. */
+  get editorView(): EditorView | null {
+    return this.view;
+  }
+
   get activeId(): string | null {
     return this.loadedId;
   }
@@ -141,7 +159,10 @@ export class EditorController {
     });
     this.states.set(docId, state);
     this.saved.set(docId, body);
-    if (this.loadedId === docId) this.view?.updateState(state);
+    if (this.loadedId === docId) {
+      this.view?.updateState(state);
+      this.checker.refresh();
+    }
     this.changed();
   }
 
@@ -164,6 +185,7 @@ export class EditorController {
     this.saved.set(docId, file.body);
     this.loadedId = docId;
     this.view.updateState(state);
+    this.checker.refresh();
     if (this.focusAfterLoad) {
       this.focusAfterLoad = false;
       this.view.focus();
@@ -173,6 +195,7 @@ export class EditorController {
 
   /** Clears the surface (no document selected). */
   unload(): void {
+    this.checker.clear();
     if (this.loadedId && this.view) this.states.set(this.loadedId, this.view.state);
     this.loadedId = null;
     this.loading = null;
@@ -209,6 +232,13 @@ export class EditorController {
     if (!view || !this.loadedId) return;
     command(view.state, view.dispatch, view);
     view.focus();
+  }
+
+  /** Closes an open suggestion card. */
+  closeSuggestion(): void {
+    const view = this.view;
+    if (!view) return;
+    view.dispatch(setGrammar(view.state.tr, { open: null }));
   }
 
   /** Focuses the text now, or as soon as the document being loaded is ready. */

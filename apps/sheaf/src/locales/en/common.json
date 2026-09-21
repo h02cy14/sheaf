@@ -179,5 +179,49 @@
       "body": "Text"
     }
   },
+  "check": {
+    "cardLabel": "What the checker found",
+    "deleteIt": "Delete it",
+    "ignore": "Ignore",
+    "addToDictionary": "Add “{{word}}”"
+  },
+  "language": {
+    "title": "Language and checking",
+    "openSettings": "Language and checking",
+    "projectLanguage": "Project language",
+    "projectLanguageHint": "Used for paragraphs too short to judge. Sheaf works out the rest paragraph by paragraph.",
+    "detect": "Work it out",
+    "documentLanguage": "Language of “{{title}}”",
+    "documentLanguageHint": "Set this when a document is in a different language from the rest of the project.",
+    "followProject": "Follow the project",
+    "checking": "Spelling and grammar",
+    "checkingOn": "Check my English",
+    "checkingHint": "English is checked on this device, offline. Chinese is never checked: no engine is worth the false positives, so Sheaf says nothing instead of guessing.",
+    "dialect": "English",
+    "dialectHint": "Which spellings count as correct.",
+    "dialects": {
+      "american": "American",
+      "british": "British",
+      "canadian": "Canadian",
+      "australian": "Australian"
+    },
+    "languageTool": "LanguageTool server",
+    "languageToolHint": "Optional, and empty by default. Fill this in only if you run a LanguageTool server yourself; Sheaf will then send paragraphs in languages it cannot check offline to that address. Plain http:// only, so it can only be your own machine or network.",
+    "languageToolActive": "Paragraphs Sheaf cannot check offline are sent to {{endpoint}}.",
+    "endpointMustBeHttp": "The address must start with http:// — Sheaf only talks to a server you run.",
+    "dictionary": "Project dictionary",
+    "dictionaryEmpty": "Nothing yet. “Add” on a suggestion puts a word here, and it travels with the project.",
+    "removeWord": "Remove “{{word}}”",
+    "ignoredCount_one": "{{count}} thing is being ignored.",
+    "ignoredCount_other": "{{count}} things are being ignored.",
+    "clearIgnored": "Stop ignoring them",
+    "states": {
+      "checked": "checked",
+      "chinese": "no grammar checking, by design",
+      "no-engine": "no checker for this language",
+      "unknown-language": "language not clear yet",
+      "turned-off": "checking is off"
+    }
+  },
   "principles": "No ads. No tracking. Your words stay on this device."
 }

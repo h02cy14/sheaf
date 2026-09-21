@@ -26,6 +26,7 @@ BSL-1.0, BlueOak-1.0.0, Python-2.0.
 |---|---|---|---|
 | `cssparser`, `cssparser-macros`, `selectors`, `dtoa-short` (Rust) | MPL-2.0 | Pulled in by Tauri (`tauri-utils` HTML/CSP handling) | Weak, **file-level** copyleft. We use them unmodified from crates.io, so there are no obligations on our code. Allowed as named exceptions only. |
 | `option-ext` (Rust) | MPL-2.0 | Pulled in by `dirs` via Tauri | Same as above. |
+| `colored` (Rust) | MPL-2.0 | Arrives with Harper: `harper-core` → `harper-brill` → `burn` (its part-of-speech tagger) → `burn-tensor` | Same weak, file-level copyleft, used unmodified. Added as a named exception in Phase 3. Worth knowing that Harper brings a small machine-learning stack (`burn`) with it: **+8 MB** of compiled binary and about a minute of build time. |
 | WebKitGTK, GTK 3 (Linux system libraries) | LGPL-2.1+ | The Linux WebView. Tauri links them dynamically. | `.deb`/`.rpm` depend on the distro's copies, so we distribute nothing. The **AppImage bundles them** as replaceable shared libraries, which LGPL permits; it needs a notice and a pointer to their source (to add before any public release). Unavoidable for Tauri on Linux. |
 | `Swatinem/rust-cache` (GitHub Action) | LGPL-3.0 | CI build cache only | Never shipped or linked into the app, so no effect on our licence. Replaceable with `actions/cache` if preferred. |
 
@@ -51,6 +52,8 @@ BSL-1.0, BlueOak-1.0.0, Python-2.0.
 | `@tauri-apps/plugin-dialog`, `tauri-plugin-dialog` (crate) | MIT OR Apache-2.0 | "Open project folder…" on desktop | Phase 1 |
 | `rusqlite` (crate, `bundled`) | MIT (SQLite itself: public domain) | Index cache (ADR 0002) | Phase 1 |
 | `serde_json` (crate) | MIT OR Apache-2.0 | SQL parameters across the bridge | Phase 1 |
+| `harper-core` (crate) | Apache-2.0 | Offline English spelling and grammar (brief §7) | Phase 3 |
+| `ureq` (crate, no TLS) | MIT OR Apache-2.0 | Talking to a LanguageTool server the writer runs, over plain http only | Phase 3 |
 
 Transitive JS in the bundle is MIT, Apache-2.0, ISC, BSD-2-Clause
 (`entities`), 0BSD (`tslib`) and CC0. **`argparse` (Python-2.0, the
@@ -87,10 +90,10 @@ Checked early so no phase gets blocked by a surprise licence:
 | 1 | React Aria Components | Apache-2.0 | ✅ |
 | 1 | Zustand | MIT | ✅ |
 | 1 | `rusqlite` (bundled SQLite) | MIT (SQLite: public domain) | ✅ |
-| 3 | Harper | Apache-2.0 | ✅ |
-| 3 | `lingua-rs` / `whatlang` | Apache-2.0 / MIT | ✅ |
-| 3 | `nspell` (Hunspell-compatible, JS) | MIT | ✅ engine. **Dictionaries vary by language** (some GPL/LGPL/MPL). Download on demand and show each dictionary's licence; never bundle GPL ones. |
-| 3 | LanguageTool | LGPL-2.1 | Separate process or server only, never linked (brief §7). ✅ with that constraint. |
+| 3 | Harper | Apache-2.0 | ✅ **Adopted in Phase 3** (`harper-core` 2.11). Brings one MPL-2.0 crate with it, see above. |
+| 3 | `lingua-rs` / `whatlang` | Apache-2.0 / MIT | Not adopted: detection is ~150 lines of script and stopword checks in `@sheaf/core`, which keeps it in the platform-free layer and testable in Node. |
+| 3 | `nspell` (Hunspell-compatible, JS) | MIT | ✅ engine. **Dictionaries vary by language** (some GPL/LGPL/MPL). Download on demand and show each dictionary's licence; never bundle GPL ones. Still ahead: Phase 3 ships English spelling through Harper, and no dictionaries for other languages yet. |
+| 3 | LanguageTool | LGPL-2.1 | Separate process or server only, never linked (brief §7). ✅ Phase 3 speaks to it over HTTP and links none of it. |
 | 5 | `docx` (npm) | MIT | ✅ |
 | 5 | Typst (optional desktop PDF) | Apache-2.0 | ✅ |
 | 6 | `citeproc-js` | CPAL-1.0 / AGPL-3.0 | ⚠ **Avoid.** Use `hayagriva` (Apache-2.0, Rust, reads CSL styles) instead. |

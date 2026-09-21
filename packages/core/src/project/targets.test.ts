@@ -74,6 +74,7 @@ describe("countsWithin", () => {
     synopsis: "",
     trashedFrom: null,
     target: null,
+    language: null,
   });
   const tree = buildTree([
     meta("f1", "manuscript", "a0"),

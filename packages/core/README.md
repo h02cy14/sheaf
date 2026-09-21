@@ -31,6 +31,9 @@ phone. That logic lives here and nowhere else.
 | `text/count.ts` | Language-aware counting: words for space-delimited scripts, characters for CJK |
 | `text/paragraphs.ts` | Markdown → paragraphs and plain text, for counting and comparing |
 | `text/diff.ts` | Myers diff over paragraphs, then words, for comparing a snapshot with the text |
+| `lang/script.ts` | Which writing system a paragraph is in, and whether it reads right to left |
+| `lang/detect.ts` | Per-paragraph language, with how sure it is (never guess on a short paragraph) |
+| `lang/policy.ts` | Which checker, if any, may see a paragraph — the one place Chinese is excluded |
 | `project/fs.ts` | The `ProjectFs` interface and `MemoryFs` |
 | `project/index-store.ts` | The rebuildable SQLite index cache, and recovery from a corrupt one |
 | `project/tree.ts` | Binder tree from `parent`/`order`, with orphan and cycle repair |
@@ -53,3 +56,5 @@ What the format looks like on disk, and why: [ADR 0002](../../docs/adr/0002-proj
   and the restore that brings it back is itself undoable.
 - `text/count.test.ts`: the same paragraph counted in English, Chinese and
   mixed text; `text/diff.test.ts`: paragraph moves, rewrites and CJK edits.
+- `lang/detect.test.ts`: scripts, languages and — most importantly — that
+  Chinese is never routed to a checker, whatever the settings say (brief §7).

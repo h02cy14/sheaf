@@ -17,6 +17,8 @@ on Windows, Linux, Android and iOS. One frontend, one Rust core, four targets
 | `src/status/` | The status bar's counts and the writing-targets dialog |
 | `src/history/` | Snapshots: the list, the comparison with the current text, restoring |
 | `src/search/` | Project search field and results (served by the local index) |
+| `src/editor/grammar/` | Checking inside the editor: what to check, the underlines, the suggestion card |
+| `src/language/` | The language dialog and the status bar's language indicator |
 | `src/components/` | Small shared pieces: the icon set and the modal dialog |
 | `src/state/` | App state (Zustand) and per-device conveniences (recent projects, last document) |
 | `src/i18n/`, `src/locales/` | Localisation; adding a language needs no code change (see its README) |
@@ -47,6 +49,20 @@ in the last half hour, and whenever you ask. Restoring writes a
 `before-restore` snapshot first, so a restore can itself be undone. Search
 runs against the local SQLite index (trigram), so a two-character Chinese
 word finds what it should.
+
+## Spelling, grammar and language
+
+Every paragraph is routed by language before anything is checked
+([ADR 0003](../../docs/adr/0003-language-layer.md)). English goes to Harper,
+which runs in the Rust shell on a background thread and never touches the
+network. Chinese goes nowhere, deliberately, and the status bar says so
+rather than staying blank. A LanguageTool server you run yourself can take
+the languages Harper cannot, and only if you enter its address.
+
+Checks run 700 ms after typing stops, batched per language, with each
+paragraph's result cached so untouched paragraphs are never re-sent.
+Underlines follow the text as it is edited; a click opens a card with the
+suggestions, "Ignore", and "Add to the project dictionary".
 
 ## Running
 

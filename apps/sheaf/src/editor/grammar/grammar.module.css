@@ -1,0 +1,29 @@
+/*
+ * Underlines for what the checker found. Quiet by design: a dotted line
+ * under the words, never a colour block, never a jumping layout.
+ */
+.problem {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--check-grammar);
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+}
+
+/* Spelling gets the colour people expect; everything else is calmer. */
+.typo,
+.misspelling {
+  text-decoration-color: var(--check-spelling);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .problem {
+    transition: background-color 120ms ease;
+  }
+}
+
+.problem:hover {
+  background: var(--hover);
+}

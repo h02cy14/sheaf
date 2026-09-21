@@ -172,6 +172,7 @@ export class ProjectSession {
           synopsis: "",
           trashedFrom: null,
           target: null,
+          language: null,
         },
         extra: {},
         body: "",
@@ -447,6 +448,7 @@ export class ProjectSession {
           synopsis: "",
           trashedFrom: inTrash ? "manuscript" : null,
           target: null,
+          language: null,
         },
         extra: {},
         body: "",
@@ -773,6 +775,49 @@ export class ProjectSession {
   async setTarget(id: string, target: number | null): Promise<void> {
     await this.updateMeta(id, (m) => ({ ...m, target }));
     this.changed();
+  }
+
+  /** Sets (or clears) the language a document is written in. */
+  async setLanguage(id: string, language: string | null): Promise<void> {
+    await this.updateMeta(id, (m) => ({ ...m, language }));
+    this.changed();
+  }
+
+  /**
+   * Adds a word to the project's own dictionary, so the checker stops
+   * flagging it. Kept with the project, because a character's name belongs to
+   * the book, not to the machine it was typed on.
+   */
+  async addToDictionary(word: string): Promise<void> {
+    const trimmed = word.trim();
+    if (trimmed === "") return;
+    const current = this.state.project.settings.dictionary;
+    if (current.includes(trimmed)) return;
+    await this.updateSettings({ dictionary: [...current, trimmed] });
+  }
+
+  /** Takes a word back out of the project's dictionary. */
+  async removeFromDictionary(word: string): Promise<void> {
+    const current = this.state.project.settings.dictionary;
+    if (!current.includes(word)) return;
+    await this.updateSettings({ dictionary: current.filter((w) => w !== word) });
+  }
+
+  /** Lets the checker flag everything again ("stop ignoring"). */
+  async clearIgnored(): Promise<void> {
+    if (this.state.project.settings.ignored.length === 0) return;
+    await this.updateSettings({ ignored: [] });
+  }
+
+  /**
+   * Stops the checker flagging one particular thing — "Ignore" on a
+   * suggestion card. Kept with the project, like the dictionary.
+   */
+  async ignoreLint(kind: string, text: string): Promise<void> {
+    const key = `${kind}|${text}`;
+    const current = this.state.project.settings.ignored;
+    if (current.includes(key)) return;
+    await this.updateSettings({ ignored: [...current, key] });
   }
 
   /** Updates project-wide writing goals in project.json. */

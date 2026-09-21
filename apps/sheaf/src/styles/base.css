@@ -32,6 +32,10 @@
   --danger-bg: #fbe9e7;
   /* Snapshot comparisons. Never the only signal: every marked run also
      carries a label, so colour-blind readers lose nothing. */
+  /* Checker underlines: distinguishable from each other and from the text,
+     and never the only signal — the card always says what is wrong. */
+  --check-spelling: #b03a2e;
+  --check-grammar: #1f6f8b;
   --diff-ins-bg: #dcf0de;
   --diff-ins-text: #14532d;
   --diff-del-bg: #fbe0dd;
@@ -84,6 +88,8 @@
     --warning-text: #f3dc9b;
     --danger: #f2a39b;
     --danger-bg: #3b1d1a;
+    --check-spelling: #f0a49b;
+    --check-grammar: #7fc4dd;
     --diff-ins-bg: #1d3524;
     --diff-ins-text: #b7e4c0;
     --diff-del-bg: #3b1d1a;

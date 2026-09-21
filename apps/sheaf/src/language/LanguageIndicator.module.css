@@ -1,0 +1,42 @@
+.indicator {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.indicator:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.name {
+  color: var(--text);
+}
+
+.indicator[data-quiet="yes"] .name {
+  color: var(--text-muted);
+}
+
+.dot,
+.state {
+  color: var(--text-faint);
+}
+
+@media (max-width: 560px) {
+  .state {
+    display: none;
+  }
+
+  .dot {
+    display: none;
+  }
+}

@@ -12,6 +12,7 @@ import {
   ZERO_COUNTS,
   type RootId,
   type SessionSnapshot,
+  type SuppressionReason,
   type TextCounts,
 } from "@sheaf/core";
 import i18next from "i18next";
@@ -49,6 +50,14 @@ export interface LiveCounts {
   counts: TextCounts;
 }
 
+/** What the checker is doing in one pane, for the status bar's indicator. */
+export interface LanguageStatus {
+  language: string;
+  reason: SuppressionReason | null;
+  checked: number;
+  skipped: number;
+}
+
 export interface Notice {
   id: number;
   text: string;
@@ -70,6 +79,8 @@ export interface AppState {
   focusMode: boolean;
   /** Unsaved counts per pane, so the status bar keeps up with typing. */
   live: Partial<Record<PaneId, LiveCounts>>;
+  /** Language and checking state per pane. */
+  languageStatus: Partial<Record<PaneId, LanguageStatus>>;
   /** Manuscript counts when the project was opened, for "this session". */
   sessionBaseline: TextCounts;
   saveStatus: SaveStatus;
@@ -88,6 +99,7 @@ export interface AppState {
   toggleFocusMode(): void;
   setFocusMode(on: boolean): void;
   setLiveCounts(pane: PaneId, live: LiveCounts | null): void;
+  setLanguageStatus(pane: PaneId, status: LanguageStatus | null): void;
   setSaveStatus(status: SaveStatus): void;
   notify(text: string, tone?: Notice["tone"]): void;
   dismissNotice(id: number): void;
@@ -134,6 +146,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   activePane: "primary",
   focusMode: false,
   live: {},
+  languageStatus: {},
   sessionBaseline: ZERO_COUNTS,
   saveStatus: "saved",
   notices: [],
@@ -284,6 +297,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       activePane: "primary",
       focusMode: false,
       live: {},
+      languageStatus: {},
       screen: "home",
     });
     setFocusedPane("primary");
@@ -322,7 +336,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
     if (secondDocId !== null) {
       const live = { ...get().live };
       delete live.secondary;
-      set({ secondDocId: null, activePane: "primary", live });
+      const languageStatus = { ...get().languageStatus };
+      delete languageStatus.secondary;
+      set({ secondDocId: null, activePane: "primary", live, languageStatus });
       setFocusedPane("primary");
       return;
     }
@@ -344,6 +360,27 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   setFocusMode(on) {
     if (get().focusMode !== on) set({ focusMode: on });
+  },
+
+  setLanguageStatus(pane, status) {
+    const previous = get().languageStatus[pane];
+    if (
+      previous === status ||
+      (previous &&
+        status &&
+        previous.language === status.language &&
+        previous.reason === status.reason &&
+        previous.checked === status.checked &&
+        previous.skipped === status.skipped)
+    ) {
+      return;
+    }
+    const next: Partial<Record<PaneId, LanguageStatus>> = {};
+    for (const other of PANES) {
+      const value = other === pane ? status : get().languageStatus[other];
+      if (value) next[other] = value;
+    }
+    set({ languageStatus: next });
   },
 
   setLiveCounts(pane, live) {

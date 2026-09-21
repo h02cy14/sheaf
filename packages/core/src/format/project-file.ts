@@ -19,6 +19,24 @@ export interface ProjectSettings {
   deadline: string | null;
   /** Daily writing goal. */
   sessionTarget: number | null;
+
+  // ---- language and checking (brief §7)
+
+  /** The manuscript's main language; paragraphs may still differ. */
+  language: string | null;
+  /** Which English Harper checks against. */
+  dialect: "american" | "british" | "canadian" | "australian";
+  /** Master switch for spelling and grammar. Chinese is off regardless. */
+  checkGrammar: boolean;
+  /**
+   * A LanguageTool server the writer configured and confirmed. `null` — the
+   * default — means Sheaf never contacts anything: local engines or nothing.
+   */
+  languageToolEndpoint: string | null;
+  /** Words the writer added for this project, in the order they were added. */
+  dictionary: string[];
+  /** `kind|text` pairs the writer told Sheaf to stop flagging. */
+  ignored: string[];
 }
 
 export const DEFAULT_SETTINGS: ProjectSettings = {
@@ -26,6 +44,12 @@ export const DEFAULT_SETTINGS: ProjectSettings = {
   manuscriptTarget: null,
   deadline: null,
   sessionTarget: null,
+  language: null,
+  dialect: "american",
+  checkGrammar: true,
+  languageToolEndpoint: null,
+  dictionary: [],
+  ignored: [],
 };
 
 export interface ProjectFile {
@@ -47,6 +71,11 @@ export type ParsedProjectFile =
 
 const KNOWN = new Set(["format", "formatVersion", "id", "title", "created", "roots", "settings"]);
 
+const stringList = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? [...new Set(value.filter((w): w is string => typeof w === "string" && w.trim() !== ""))]
+    : [];
+
 const positiveInt = (value: unknown): number | null => {
   const n = Number(value);
   return Number.isInteger(n) && n > 0 ? n : null;
@@ -62,6 +91,23 @@ function parseSettings(raw: unknown): ProjectSettings {
   const deadline = fields["deadline"];
   settings.deadline =
     typeof deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? deadline : null;
+
+  const language = fields["language"];
+  settings.language =
+    typeof language === "string" && language.trim() !== "" ? language.trim() : null;
+  const dialect = fields["dialect"];
+  if (dialect === "british" || dialect === "canadian" || dialect === "australian") {
+    settings.dialect = dialect;
+  }
+  if (fields["checkGrammar"] === false) settings.checkGrammar = false;
+  // Plain http only, and only an address the writer put here: Sheaf talks to
+  // a LanguageTool server you run, never to a cloud service (brief §7, and
+  // docs/adr/0003-language-layer.md). The shell enforces the same rule.
+  const endpoint = fields["languageToolEndpoint"];
+  settings.languageToolEndpoint =
+    typeof endpoint === "string" && /^http:\/\/\S+$/.test(endpoint.trim()) ? endpoint.trim() : null;
+  settings.dictionary = stringList(fields["dictionary"]);
+  settings.ignored = stringList(fields["ignored"]);
   return settings;
 }
 
