@@ -27,7 +27,7 @@ import type { MarkType, NodeType } from "prosemirror-model";
 import { liftListItem, sinkListItem, splitListItem, wrapInList } from "prosemirror-schema-list";
 import { Plugin, type Command, type EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import { grammarPlugin } from "./grammar/plugin";
+import { grammarPlugin, openProblemAtCursor } from "./grammar/plugin";
 
 const nodes = schema.nodes;
 const marks = schema.marks;
@@ -171,6 +171,9 @@ const typingShortcuts = inputRules({
 });
 
 const keys = keymap({
+  // The "quick fix" convention: open the checker's card for whatever the
+  // cursor is in, without reaching for the mouse.
+  "Mod-.": (state, dispatch) => openProblemAtCursor(state, dispatch),
   "Mod-z": undo,
   "Shift-Mod-z": redo,
   "Mod-y": redo,

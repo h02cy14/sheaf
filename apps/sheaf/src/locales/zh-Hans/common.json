@@ -188,6 +188,8 @@
     "documentLanguage": "“{{title}}”的语言",
     "documentLanguageHint": "当某个文档与项目其余部分语言不同时设置。",
     "followProject": "跟随项目",
+    "thisParagraph": "本段落",
+    "thisParagraphHint": "应用于以“{{opening}}”开头的段落，段落移动后仍然有效。改写开头后，Sheaf 会重新自动判断。",
     "checking": "拼写与语法",
     "checkingOn": "检查我的英文",
     "checkingHint": "英文在本机离线检查。中文从不检查：没有值得信赖的引擎，与其误报，不如保持安静。",

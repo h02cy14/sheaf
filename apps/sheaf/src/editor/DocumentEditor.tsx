@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "../components/Icon";
 import { onBeforeExit } from "../platform";
-import { countText, type TextCounts } from "@sheaf/core";
+import { countText, readParagraphLanguages, type TextCounts } from "@sheaf/core";
 import { hasOfflineChecker } from "../platform/grammar";
 import { currentSession, useAppStore } from "../state/app-store";
 import type { PaneId } from "../state/panes";
@@ -50,11 +50,13 @@ function grammarContext(pane: PaneId): GrammarContext | null {
   if (!snapshot) return null;
   const docId = pane === "secondary" ? state.secondDocId : state.activeDocId;
   const settings = snapshot.project.settings;
+  const doc = docId ? snapshot.docs.get(docId) : undefined;
   return {
+    paragraphLanguages: readParagraphLanguages(doc?.extra ?? {}),
     checkGrammar: settings.checkGrammar,
     languageToolEndpoint: settings.languageToolEndpoint,
     projectLanguage: settings.language,
-    documentLanguage: (docId && snapshot.docs.get(docId)?.meta.language) || null,
+    documentLanguage: doc?.meta.language ?? null,
     dialect: settings.dialect,
     dictionary: settings.dictionary,
     ignored: settings.ignored,
@@ -182,12 +184,16 @@ export function DocumentEditor({ pane = "primary" }: { pane?: PaneId }) {
       settings.ignored.length,
     ].join("|");
   });
-  const documentLanguage = useAppStore((s) =>
-    activeDocId ? (s.snapshot?.docs.get(activeDocId)?.meta.language ?? null) : null,
-  );
+  // The document's own language, and the paragraphs the writer has set a
+  // language for: changing either re-checks straight away.
+  const documentStamp = useAppStore((s) => {
+    const doc = activeDocId ? s.snapshot?.docs.get(activeDocId) : undefined;
+    if (!doc) return "";
+    return `${doc.meta.language ?? ""}|${JSON.stringify(readParagraphLanguages(doc.extra))}`;
+  });
   useEffect(() => {
     controller.checker.refresh();
-  }, [controller, settingsStamp, documentLanguage]);
+  }, [controller, settingsStamp, documentStamp]);
 
   // Focus the title only once the field for the *active* document exists.
   useLayoutEffect(() => {
@@ -283,6 +289,7 @@ export function DocumentEditor({ pane = "primary" }: { pane?: PaneId }) {
           <SuggestionCard
             view={controller.editorView}
             problem={controller.state ? grammarState(controller.state).open : null}
+            takeFocus={controller.state ? grammarState(controller.state).openedByKeyboard : false}
             onClose={() => controller.closeSuggestion()}
           />
         </div>

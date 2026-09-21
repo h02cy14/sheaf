@@ -26,8 +26,9 @@ import {
   type ProjectFile,
   type ProjectSettings,
 } from "../format/project-file";
+import { withParagraphLanguage } from "../lang/overrides";
 import { countText, type TextCounts } from "../text/count";
-import { plainTextOf } from "../text/paragraphs";
+import { paragraphsOf, plainTextOf } from "../text/paragraphs";
 import { isRootId, type DocKind, type DocMeta, type RootId } from "../format/types";
 import type { FileStat, ProjectFs } from "./fs";
 import type { IndexStore } from "./index-store";
@@ -393,6 +394,51 @@ export class ProjectSession {
   }
 
   /** Read-modify-write of one document's metadata. The body on disk is kept as-is. */
+  /**
+   * Read-modify-write of one document's frontmatter extras, used for the
+   * paragraph language overrides. Same rules as `updateMeta`: the body on
+   * disk is kept exactly as it is.
+   */
+  private updateExtra(
+    id: string,
+    patch: (extra: Record<string, unknown>, body: string) => Record<string, unknown>,
+  ): Promise<void> {
+    const { path } = this.doc(id);
+    return this.enqueue(path, async () => {
+      const doc = this.doc(id);
+      if (await this.changedOnDisk(path)) this.changedElsewhere.add(path);
+      const text = await this.fs.readText(path);
+      let file: DocFile = { meta: doc.meta, extra: doc.extra, body: "" };
+      if (text !== null) {
+        const parsed = parseDocFile(text, id).file;
+        file = { meta: { ...parsed.meta, id }, extra: parsed.extra, body: parsed.body };
+      }
+      await this.write(path, { ...file, extra: patch(file.extra, file.body) });
+    });
+  }
+
+  /**
+   * Says what language one paragraph is in, overriding detection. Anchored
+   * to the paragraph's opening words rather than to its position (see
+   * `lang/overrides.ts`); overrides whose paragraph is no longer in the
+   * document are dropped at the same time, so the list cannot grow forever.
+   */
+  async setParagraphLanguage(
+    id: string,
+    paragraphText: string,
+    language: string | null,
+  ): Promise<void> {
+    await this.updateExtra(id, (extra, body) =>
+      withParagraphLanguage(
+        extra,
+        paragraphText,
+        language,
+        paragraphsOf(body).map((paragraph) => plainTextOf(paragraph)),
+      ),
+    );
+    this.changed();
+  }
+
   private updateMeta(id: string, patch: (meta: DocMeta) => DocMeta): Promise<void> {
     const { path } = this.doc(id);
     return this.enqueue(path, async () => {

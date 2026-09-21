@@ -61,7 +61,8 @@ the languages Harper cannot, and only if you enter its address.
 
 Checks run 700 ms after typing stops, batched per language, with each
 paragraph's result cached so untouched paragraphs are never re-sent.
-Underlines follow the text as it is edited; a click opens a card with the
+Underlines follow the text as it is edited; a click — or Ctrl/⌘+. from the
+keyboard, which also moves focus into the card — opens a card with the
 suggestions, "Ignore", and "Add to the project dictionary".
 
 ## Running

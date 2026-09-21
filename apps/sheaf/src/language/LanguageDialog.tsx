@@ -40,6 +40,12 @@ const LANGUAGES = [
   "vi",
 ] as const;
 
+/** The opening of a paragraph, for showing which one an override applies to. */
+function opening(text: string): string {
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  return trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
+}
+
 /** A language's name in the reader's own language, e.g. "中文" in a zh UI. */
 export function languageName(tag: string, locale: string): string {
   try {
@@ -56,10 +62,12 @@ export function LanguageDialog({ onClose }: { onClose: () => void }) {
     s.activePane === "secondary" ? s.secondDocId : s.activeDocId,
   );
   const doc = useAppStore((s) => (activeDocId ? s.snapshot?.docs.get(activeDocId) : undefined));
+  const paragraph = useAppStore((s) => s.languageStatus[s.activePane]);
   const [error, setError] = useState<string | null>(null);
   const ids = {
     project: useId(),
     document: useId(),
+    paragraph: useId(),
     dialect: useId(),
     check: useId(),
     endpoint: useId(),
@@ -122,6 +130,34 @@ export function LanguageDialog({ onClose }: { onClose: () => void }) {
               ))}
             </select>
             <p className={styles.hint}>{t("language.documentLanguageHint")}</p>
+          </>
+        )}
+
+        {activeDocId && paragraph && paragraph.text !== "" && (
+          <>
+            <label htmlFor={ids.paragraph}>{t("language.thisParagraph")}</label>
+            <select
+              id={ids.paragraph}
+              className={styles.input}
+              value={paragraph.overridden ? paragraph.language : ""}
+              onChange={(e) => {
+                void currentSession()
+                  .setParagraphLanguage(activeDocId, paragraph.text, e.currentTarget.value || null)
+                  .catch((err: unknown) =>
+                    setError(err instanceof Error ? err.message : String(err)),
+                  );
+              }}
+            >
+              <option value="">{t("language.detect")}</option>
+              {options.map((option) => (
+                <option key={option.tag} value={option.tag}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+            <p className={styles.hint}>
+              {t("language.thisParagraphHint", { opening: opening(paragraph.text) })}
+            </p>
           </>
         )}
 

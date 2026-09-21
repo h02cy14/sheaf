@@ -22,6 +22,13 @@ export {
   type LanguageTag,
 } from "./lang/detect";
 export {
+  paragraphAnchor,
+  paragraphLanguage,
+  readParagraphLanguages,
+  withParagraphLanguage,
+  type ParagraphLanguages,
+} from "./lang/overrides";
+export {
   chooseChecker,
   wouldLeaveDevice,
   type CheckerAvailability,

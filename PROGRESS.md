@@ -34,7 +34,13 @@ still unverified — see below.
   (Han, kana, Hangul, Arabic, Hebrew, Cyrillic, Greek, Thai, Devanagari),
   then a stopword vote for Latin-script languages. It reports how sure it is,
   and a short paragraph defers to the language the writer declared for the
-  document, then the project — never to a guess. Overrides at both levels.
+  document, then the project — never to a guess.
+- **Overrides at every level the brief asks for**: project, document, and
+  **one paragraph**. A paragraph has no identity in Markdown, so its override
+  is anchored to its opening words and stored in the document's own
+  frontmatter (`paragraphLanguages`), where it is readable and travels with
+  the file. Move the paragraph and it follows; rewrite its opening and Sheaf
+  goes back to working the language out.
 - **Chinese is never checked**, by rule rather than by setting: not when
   checking is on, not when a LanguageTool endpoint exists. The same calm
   treatment covers any language with no engine. The status bar says
@@ -45,9 +51,9 @@ still unverified — see below.
   into the Rust shell. It runs on a background thread, 700 ms after typing
   stops, batched per language, with each paragraph's result cached so
   untouched paragraphs are never re-sent. Underlines follow the text as it is
-  edited; a click opens a card with suggestions, "Ignore" and "Add to the
-  project dictionary". Both lists live in `project.json` and travel with the
-  project.
+  edited; a click — or **Ctrl/⌘+.** for people who don't want to reach for the
+  mouse — opens a card with suggestions, "Ignore" and "Add to the project
+  dictionary". Both lists live in `project.json` and travel with the project.
 - **LanguageTool, if you run one yourself.** Sheaf speaks to its HTTP API and
   links none of it (it is LGPL). It is contacted only when the writer enters
   an address, and only over plain `http://` — refusing `https://` means the
@@ -69,13 +75,27 @@ still unverified — see below.
 
 ### Not done / open
 
-- **⚑ For the owner:** Harper brings a small machine-learning stack (`burn`)
-  with it for its part-of-speech tagger. That is **+8 MB** in the Windows
-  binary (8.7 MB → 16.9 MB) and about a minute of build time, and it adds one
-  **MPL-2.0** crate (`colored`) to the tree — weak, file-level copyleft, used
-  unmodified, now a named exception in `deny.toml` and recorded in
-  [docs/licences.md](docs/licences.md). Worth knowing before the mobile
-  download size matters.
+- **⚑ For the owner — what offline checking costs.** Harper brings a small
+  machine-learning stack (`burn`) with it for its part-of-speech tagger, plus
+  its dictionary. Measured against the Phase 2 build:
+
+  | Download | Phase 2 | Phase 3 |
+  |---|---|---|
+  | Windows installer artifact | 5 MB | 10 MB |
+  | Android APK (universal) | 10 MB | 19 MB (45 MB unzipped) |
+  | iOS artifact | 6 MB | 12 MB |
+  | Linux artifact | 82 MB | 92 MB |
+
+  Build time went from ~1m45 to ~2m45 for a clean release build, and one
+  **MPL-2.0** crate (`colored`) joined the tree — weak, file-level copyleft,
+  used unmodified, now a named exception in `deny.toml` and recorded in
+  [docs/licences.md](docs/licences.md).
+
+  If the mobile download matters more than offline English, there are two
+  ways back: build **per-ABI APKs** (the universal one carries three copies
+  of the native code, so this alone roughly thirds it), or make the checker a
+  desktop-only feature and let phones use the platform's own spelling. Both
+  are your call; nothing in the code assumes either.
 - **Spelling for languages other than English.** Harper covers English.
   Hunspell dictionaries for other languages vary in licence (some GPL) and
   need downloading on demand, which is its own design and its own decision;

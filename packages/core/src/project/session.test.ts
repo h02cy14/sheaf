@@ -531,3 +531,78 @@ describe("migration harness", () => {
     expect(project.ok && project.project.formatVersion).toBe(1);
   });
 });
+
+describe("language", () => {
+  const ENGLISH = "The keeper counted the waves until morning came.";
+  const CHINESE = "她在灯塔旁等待了很久。";
+
+  it("remembers a language for a document and for one paragraph", async () => {
+    const { fs, session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, `${ENGLISH}\n\n${CHINESE}\n`);
+
+    await session.setLanguage(id, "en");
+    await session.setParagraphLanguage(id, CHINESE, "zh-Hant");
+    await session.flush();
+
+    const file = parseDocFile((await fs.readText(docPath(id))) ?? "", id).file;
+    expect(file.meta.language).toBe("en");
+    expect(file.extra["paragraphLanguages"]).toEqual({ [CHINESE]: "zh-Hant" });
+    // The words themselves are untouched by any of it.
+    expect(file.body).toContain(CHINESE);
+
+    // …and it is still there after a reopen.
+    const reopened = await openSession(fs);
+    const doc = reopened.snapshot().docs.get(id);
+    expect(doc?.meta.language).toBe("en");
+    expect(doc?.extra["paragraphLanguages"]).toEqual({ [CHINESE]: "zh-Hant" });
+  });
+
+  it("forgets a paragraph override once that paragraph is gone", async () => {
+    const { fs, session } = await newProject();
+    const id = flatten(session.snapshot().tree)[0]?.id as string;
+    await session.readDocument(id);
+    await session.saveBody(id, `${ENGLISH}\n\n${CHINESE}\n`);
+    await session.setParagraphLanguage(id, CHINESE, "zh");
+    await session.setParagraphLanguage(id, ENGLISH, "en");
+    await session.flush();
+    expect(
+      Object.keys(
+        parseDocFile((await fs.readText(docPath(id))) ?? "", id).file.extra[
+          "paragraphLanguages"
+        ] as object,
+      ),
+    ).toHaveLength(2);
+
+    // The Chinese paragraph is deleted; the next override prunes it.
+    await session.saveBody(id, `${ENGLISH}\n`);
+    await session.setParagraphLanguage(id, ENGLISH, "en-GB");
+    await session.flush();
+    expect(
+      parseDocFile((await fs.readText(docPath(id))) ?? "", id).file.extra["paragraphLanguages"],
+    ).toEqual({ [ENGLISH]: "en-GB" });
+  });
+
+  it("keeps the writer's own words with the project", async () => {
+    const { fs, session } = await newProject();
+    await session.addToDictionary("mirelight");
+    await session.addToDictionary("mirelight");
+    await session.ignoreLint("typo", "Thessaly");
+    await session.flush();
+
+    const project = parseProjectFile((await fs.readText(PROJECT_FILE)) ?? "", ROOTS);
+    expect(project.ok).toBe(true);
+    if (!project.ok) return;
+    expect(project.project.settings.dictionary).toEqual(["mirelight"]);
+    expect(project.project.settings.ignored).toEqual(["typo|Thessaly"]);
+
+    await session.removeFromDictionary("mirelight");
+    await session.clearIgnored();
+    await session.flush();
+    const after = parseProjectFile((await fs.readText(PROJECT_FILE)) ?? "", ROOTS);
+    if (!after.ok) return;
+    expect(after.project.settings.dictionary).toEqual([]);
+    expect(after.project.settings.ignored).toEqual([]);
+  });
+});

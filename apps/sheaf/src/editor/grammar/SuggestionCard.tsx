@@ -38,10 +38,13 @@ function cardPosition(
 export function SuggestionCard({
   view,
   problem,
+  takeFocus = false,
   onClose,
 }: {
   view: EditorView | null;
   problem: Problem | null;
+  /** True when the card was opened from the keyboard: it then takes focus. */
+  takeFocus?: boolean;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -56,6 +59,12 @@ export function SuggestionCard({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [problem, onClose]);
+
+  // Opened from the keyboard: put focus on the first suggestion, so the fix
+  // is one more key away. Opened by click: focus stays in the text.
+  useEffect(() => {
+    if (takeFocus) firstButton.current?.focus();
+  }, [takeFocus, problem]);
 
   if (!problem || !view || !at) return null;
 

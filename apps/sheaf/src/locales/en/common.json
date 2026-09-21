@@ -194,6 +194,8 @@
     "documentLanguage": "Language of “{{title}}”",
     "documentLanguageHint": "Set this when a document is in a different language from the rest of the project.",
     "followProject": "Follow the project",
+    "thisParagraph": "This paragraph",
+    "thisParagraphHint": "Applies to the paragraph starting “{{opening}}”, and follows it if you move it. Rewrite its opening and Sheaf goes back to working the language out.",
     "checking": "Spelling and grammar",
     "checkingOn": "Check my English",
     "checkingHint": "English is checked on this device, offline. Chinese is never checked: no engine is worth the false positives, so Sheaf says nothing instead of guessing.",

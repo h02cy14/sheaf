@@ -54,6 +54,9 @@ export interface LiveCounts {
 export interface LanguageStatus {
   language: string;
   reason: SuppressionReason | null;
+  /** The paragraph the cursor is in: what a paragraph override applies to. */
+  text: string;
+  overridden: boolean;
   checked: number;
   skipped: number;
 }
@@ -370,6 +373,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
         status &&
         previous.language === status.language &&
         previous.reason === status.reason &&
+        previous.text === status.text &&
+        previous.overridden === status.overridden &&
         previous.checked === status.checked &&
         previous.skipped === status.skipped)
     ) {

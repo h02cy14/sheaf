@@ -60,8 +60,20 @@ describe("the grammar plugin", () => {
   it("reports the language of the paragraph the cursor is in", () => {
     let state = stateWith("The keeper counted the waves.\n\n她在灯塔旁等待了很久。\n");
     const blocks = [
-      { pos: 0, language: "en", reason: null },
-      { pos: 31, language: "zh", reason: "chinese" as const },
+      {
+        pos: 0,
+        language: "en",
+        reason: null,
+        text: "The keeper counted the waves.",
+        overridden: false,
+      },
+      {
+        pos: 31,
+        language: "zh",
+        reason: "chinese" as const,
+        text: "她在灯塔旁等待了很久。",
+        overridden: false,
+      },
     ];
     state = state.apply(setGrammar(state.tr, { blocks, counts: { checked: 1, skipped: 1 } }));
 

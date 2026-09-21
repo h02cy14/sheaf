@@ -11,8 +11,10 @@
 import {
   chooseChecker,
   languageFor,
+  paragraphLanguage,
   type CheckerAvailability,
   type CheckerSettings,
+  type ParagraphLanguages,
 } from "@sheaf/core";
 import type { EditorView } from "prosemirror-view";
 import { checkEnglish, type GrammarLint } from "../../platform/grammar";
@@ -26,6 +28,8 @@ export interface GrammarContext extends CheckerSettings {
   projectLanguage: string | null;
   /** The language the writer declared for this document, if any. */
   documentLanguage: string | null;
+  /** Languages the writer chose for individual paragraphs. */
+  paragraphLanguages: ParagraphLanguages;
   dialect: string;
   dictionary: readonly string[];
   /** `kind|text` entries the writer has told Sheaf to stop flagging. */
@@ -140,9 +144,20 @@ export class GrammarChecker {
     let skipped = 0;
 
     for (const block of blocks) {
-      const language = languageFor(block.text, context.documentLanguage, context.projectLanguage);
+      const chosen = paragraphLanguage(context.paragraphLanguages, block.text);
+      const language = languageFor(
+        block.text,
+        chosen ?? context.documentLanguage,
+        context.projectLanguage,
+      );
       const choice = chooseChecker(language, context, context.available);
-      decisions.push({ pos: block.pos, language, reason: choice.reason ?? null });
+      decisions.push({
+        pos: block.pos,
+        language,
+        reason: choice.reason ?? null,
+        text: block.text,
+        overridden: chosen !== null,
+      });
       if (choice.engine === "none") skipped++;
       else checked++;
       if (choice.engine === "none") continue;
@@ -185,7 +200,7 @@ export class GrammarChecker {
 
     if (missing.length > 0) {
       const text = missing.map((block) => block.text).join(JOIN);
-      let lints: GrammarLint[];
+      let lints: GrammarLint[] | null;
       try {
         lints =
           group.engine === "harper"
@@ -201,18 +216,23 @@ export class GrammarChecker {
               });
       } catch {
         // A checker that is unavailable or unhappy must never cost the
-        // writer anything: no underlines this time, and no message.
-        lints = [];
+        // writer anything: no underlines this time, and no message. The
+        // failure is not remembered either — a server that comes back up, or
+        // a moment of bad luck, should not leave paragraphs unchecked until
+        // they are edited.
+        lints = null;
       }
-      // Split the batch back into paragraphs.
-      let offset = 0;
-      for (const block of missing) {
-        const end = offset + block.text.length;
-        const mine = lints
-          .filter((lint) => lint.start >= offset && lint.end <= end)
-          .map((lint) => ({ ...lint, start: lint.start - offset, end: lint.end - offset }));
-        this.remember(keyOf(block.text), mine);
-        offset = end + JOIN.length;
+      if (lints !== null) {
+        // Split the batch back into paragraphs.
+        let offset = 0;
+        for (const block of missing) {
+          const end = offset + block.text.length;
+          const mine = lints
+            .filter((lint) => lint.start >= offset && lint.end <= end)
+            .map((lint) => ({ ...lint, start: lint.start - offset, end: lint.end - offset }));
+          this.remember(keyOf(block.text), mine);
+          offset = end + JOIN.length;
+        }
       }
     }
 

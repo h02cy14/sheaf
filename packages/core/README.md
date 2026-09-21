@@ -34,6 +34,7 @@ phone. That logic lives here and nowhere else.
 | `lang/script.ts` | Which writing system a paragraph is in, and whether it reads right to left |
 | `lang/detect.ts` | Per-paragraph language, with how sure it is (never guess on a short paragraph) |
 | `lang/policy.ts` | Which checker, if any, may see a paragraph — the one place Chinese is excluded |
+| `lang/overrides.ts` | Per-paragraph language overrides, anchored to the paragraph's opening words |
 | `project/fs.ts` | The `ProjectFs` interface and `MemoryFs` |
 | `project/index-store.ts` | The rebuildable SQLite index cache, and recovery from a corrupt one |
 | `project/tree.ts` | Binder tree from `parent`/`order`, with orphan and cycle repair |

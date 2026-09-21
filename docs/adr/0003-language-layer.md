@@ -37,6 +37,20 @@ to exactly the same outcome as a correct guess — nothing is checked, and the
 indicator says so. If that stops being true (a Finnish engine appears), swap
 the vote for `lingua-rs` behind the same function.
 
+### Overrides, and where a paragraph's language is kept
+
+The brief asks for a manual override "at document level and at paragraph
+level". A document is a file, so its language is a frontmatter field. A
+paragraph is not anything — Markdown gives it no id and no attribute we could
+add without spoiling the file for every other tool.
+
+So a paragraph override is anchored to the paragraph's **opening words**
+(first 48 characters, whitespace normalised) and kept in the document's
+frontmatter under `paragraphLanguages`. Moving the paragraph keeps the
+override; rewriting its opening drops it, which is the honest behaviour —
+the choice was made about that sentence, not about that position. Overrides
+whose paragraph has gone are pruned the next time one is set.
+
 ## Decision 2: Harper runs in Rust, not as WASM in the page
 
 Harper (Apache-2.0) is the engine the brief names for offline English, and
