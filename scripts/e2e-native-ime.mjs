@@ -296,6 +296,47 @@ if (!parsed.includes("ltr"))
   fail(`the English paragraph should stay left to right; got ${directions}`);
 console.log(`direction per paragraph: ${directions}`);
 
+// ---- 7b. Deleting works in whole characters, not in code units: one
+// Backspace removes a whole emoji, and CJK text is never letter-spaced
+// (which would break line breaking — brief §7).
+await evaluate(`{
+  const paragraphs = [...document.querySelectorAll('.ProseMirror p')];
+  const last = paragraphs[paragraphs.length - 1];
+  const range = document.createRange();
+  range.selectNodeContents(last);
+  range.collapse(false);
+  const selection = getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+  document.querySelector('.ProseMirror').focus();
+}`);
+await evaluate(`document.execCommand('insertParagraph')`);
+await send("Input.insertText", { text: `ab${String.fromCodePoint(0x1f30a)}` });
+await sleep(120);
+const backspace = {
+  windowsVirtualKeyCode: 8,
+  key: "Backspace",
+  code: "Backspace",
+  nativeVirtualKeyCode: 8,
+};
+await send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...backspace });
+await send("Input.dispatchKeyEvent", { type: "keyUp", ...backspace });
+await sleep(200);
+const afterBackspace = await evaluate(`{
+  const paragraphs = [...document.querySelectorAll('.ProseMirror p')];
+  paragraphs[paragraphs.length - 1].textContent;
+}`);
+if (afterBackspace !== "ab") {
+  fail(`one Backspace should remove the whole emoji; left ${JSON.stringify(afterBackspace)}`);
+}
+const spacing = await evaluate(
+  `getComputedStyle(document.querySelector('.ProseMirror')).letterSpacing`,
+);
+if (spacing !== "normal" && spacing !== "0px") {
+  fail(`CJK text must never be letter-spaced; the editor has ${spacing}`);
+}
+console.log("editing: one Backspace removes a whole character, and nothing is letter-spaced");
+
 // ---- 8. What reached the disk is exactly what was typed.
 await sleep(1500);
 const project = readdirSync(workdir).find((n) => n.endsWith(".sheaf"));

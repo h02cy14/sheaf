@@ -190,6 +190,9 @@ export class GrammarChecker {
       problems.push(...toProblems(group, lints, ignored));
     }
 
+    // The editor may have been torn down while an engine was thinking (a
+    // document switch, a closed project): never dispatch into a dead view.
+    if (this.options.view() !== view) return;
     view.dispatch(setGrammar(view.state.tr, { problems, blocks: decisions, counts, busy: false }));
   }
 

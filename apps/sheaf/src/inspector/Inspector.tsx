@@ -119,6 +119,20 @@ export function Inspector({ onOpenHistory }: { onOpenHistory?: () => void }) {
                 count: counts.doc,
                 formatted: new Intl.NumberFormat(i18n.language).format(counts.doc),
               })}
+              {/* A mixed document says both halves, since one number hides
+                  what the other is made of (brief §7). */}
+              {counts.unit === "words" &&
+                counts.docBreakdown.words > 0 &&
+                counts.docBreakdown.cjk > 0 && (
+                  <span className={styles.breakdown}>
+                    {t("counts.breakdown", {
+                      words: new Intl.NumberFormat(i18n.language).format(counts.docBreakdown.words),
+                      characters: new Intl.NumberFormat(i18n.language).format(
+                        counts.docBreakdown.cjk,
+                      ),
+                    })}
+                  </span>
+                )}
             </dd>
           </>
         )}

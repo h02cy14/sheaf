@@ -120,7 +120,8 @@
     "ofTarget": "{{current}} / {{target}}",
     "delta": "{{formatted}} {{unit}}",
     "perDay_other": "每天 {{formatted}} {{unit}}，还剩 {{count}} 天",
-    "overdue": "已过截止日期——还差 {{formatted}} {{unit}}"
+    "overdue": "已过截止日期——还差 {{formatted}} {{unit}}",
+    "breakdown": "{{words}} 词 + {{characters}} 字"
   },
   "targets": {
     "open": "目标",

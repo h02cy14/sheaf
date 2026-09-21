@@ -74,3 +74,10 @@
 .historyButton:hover {
   background: var(--hover);
 }
+
+/* The two halves of a mixed-script count, under the total. */
+.breakdown {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}

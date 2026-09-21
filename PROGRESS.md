@@ -64,7 +64,14 @@ still unverified — see below.
   an English paragraph inside an Arabic one does not. Nothing about it
   reaches the Markdown file.
 - **IME correctness**, tested rather than assumed: composition start, update
-  and cancel, candidate selection, and what lands on disk afterwards.
+  and cancel, candidate selection, and what lands on disk afterwards. The
+  same test checks two things the brief asks for that are easy to lose by
+  accident: one Backspace removes a whole character (an emoji, not half of
+  one), and the writing surface is never letter-spaced, which would break
+  CJK line breaking.
+- **Both halves of a mixed count are shown**, not just the total: a document
+  with English and Chinese in it reads "16 words" with "6 words + 10
+  characters" underneath, because one number hides what it is made of.
 - **[ADR 0003](docs/adr/0003-language-layer.md)** records why detection is
   ours rather than `lingua-rs`, why Harper is in Rust rather than WASM (with
   the size measured), why LanguageTool is http-only, and what each choice

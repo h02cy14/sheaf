@@ -125,7 +125,8 @@
     "delta": "{{formatted}} {{unit}}",
     "perDay_one": "{{formatted}} {{unit}} a day — {{count}} day left",
     "perDay_other": "{{formatted}} {{unit}} a day — {{count}} days left",
-    "overdue": "Past the deadline — {{formatted}} {{unit}} to go"
+    "overdue": "Past the deadline — {{formatted}} {{unit}} to go",
+    "breakdown": "{{words}} words + {{characters}} characters"
   },
   "targets": {
     "open": "Targets",

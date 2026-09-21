@@ -18,6 +18,13 @@ export interface CountsView {
   unit: ProjectSettings["countUnit"];
   /** The document in the active pane, including anything filed under it. */
   doc: number;
+  /**
+   * The same document split the way it was counted: words for
+   * space-delimited scripts, characters for CJK. The brief (§7) asks for
+   * both to be shown, because in a mixed document one number hides half the
+   * story.
+   */
+  docBreakdown: TextCounts;
   docTarget: number | null;
   manuscript: number;
   manuscriptTarget: number | null;
@@ -50,10 +57,14 @@ export function useCounts(): CountsView | null {
     const settings = snapshot.project.settings;
     const unit = settings.countUnit;
     const manuscript = countFor(countsWithin(snapshot.tree, docs, "manuscript"), unit);
-    const doc = activeDocId ? countFor(countsWithin(snapshot.tree, docs, activeDocId), unit) : 0;
+    const docCounts = activeDocId
+      ? countsWithin(snapshot.tree, docs, activeDocId)
+      : { words: 0, cjk: 0, characters: 0 };
+    const doc = countFor(docCounts, unit);
     return {
       unit,
       doc,
+      docBreakdown: docCounts,
       docTarget: activeDocId ? (snapshot.docs.get(activeDocId)?.meta.target ?? null) : null,
       manuscript,
       manuscriptTarget: settings.manuscriptTarget,
